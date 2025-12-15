@@ -5,6 +5,7 @@ ScanDine adalah sistem pemesanan cafe berbasis QR Code yang memungkinkan pelangg
 ## 📋 Konsep Project
 
 ### Alur Pelanggan (Customer Flow)
+
 1. **Scan QR Code** - Pelanggan scan QR code yang ada di meja cafe
 2. **Lihat Menu** - Menampilkan daftar menu berdasarkan kategori
 3. **Pilih Menu & Modifier** - Klik menu untuk melihat detail dan memilih topping/modifier (tingkat kepedasan, size, extra topping, dll)
@@ -14,6 +15,7 @@ ScanDine adalah sistem pemesanan cafe berbasis QR Code yang memungkinkan pelangg
 7. **Order Confirmed** - Status meja berubah jadi occupied, order masuk ke dashboard admin
 
 ### Alur Admin (Admin Flow)
+
 1. **Dashboard** - Melihat statistik dan ringkasan pesanan
 2. **Manage Orders** - Melihat dan update status order (pending → confirmed → preparing → served → completed)
 3. **Manage Tables** - CRUD meja cafe & generate QR code untuk setiap meja
@@ -23,70 +25,80 @@ ScanDine adalah sistem pemesanan cafe berbasis QR Code yang memungkinkan pelangg
 
 ## 🛠️ Tech Stack
 
-- **Backend Framework**: Laravel 11.x
-- **Database**: PostgreSQL (Online/Cloud Database)
-- **Payment Gateway**: Midtrans Snap
-- **Image Storage**: Cloudinary CDN
-- **QR Code Generator**: SimpleSoftwareIO Simple QR Code
-- **Frontend**: Blade Templates + JavaScript (Cart di localStorage)
+-   **Backend Framework**: Laravel 11.x
+-   **Database**: PostgreSQL (Online/Cloud Database)
+-   **Payment Gateway**: Midtrans Snap
+-   **Image Storage**: Cloudinary CDN
+-   **QR Code Generator**: SimpleSoftwareIO Simple QR Code
+-   **Frontend**: Blade Templates + JavaScript (Cart di localStorage)
 
 ## 📦 Requirements
 
 Sebelum memulai, pastikan Anda sudah menginstall:
 
 ### 1. PHP 8.2 atau lebih tinggi
+
 Download: [https://www.php.net/downloads](https://www.php.net/downloads)
-- **Windows**: Download dari [windows.php.net](https://windows.php.net/download/)
-- Pastikan extension berikut aktif di `php.ini`:
-  ```ini
-  extension=pdo_pgsql
-  extension=pgsql
-  extension=gd
-  extension=curl
-  extension=mbstring
-  extension=openssl
-  ```
+
+-   **Windows**: Download dari [windows.php.net](https://windows.php.net/download/)
+-   Pastikan extension berikut aktif di `php.ini`:
+    ```ini
+    extension=pdo_pgsql
+    extension=pgsql
+    extension=gd
+    extension=curl
+    extension=mbstring
+    extension=openssl
+    ```
 
 ### 2. Composer (PHP Dependency Manager)
+
 Download: [https://getcomposer.org/download/](https://getcomposer.org/download/)
-- **Windows**: Download `Composer-Setup.exe` dan install
+
+-   **Windows**: Download `Composer-Setup.exe` dan install
 
 Cek instalasi:
+
 ```bash
 php --version
 composer --version
 ```
 
 ### 3. PostgreSQL Online Database
+
 **Rekomendasi Provider (Gratis):**
-- [Neon.tech](https://neon.tech) - Free 0.5 GB
-- [Supabase](https://supabase.com) - Free 500 MB
-- [ElephantSQL](https://www.elephantsql.com) - Free 20 MB
-- [Aiven](https://aiven.io) - Free Trial
+
+-   [Neon.tech](https://neon.tech) - Free 0.5 GB
+-   [Supabase](https://supabase.com) - Free 500 MB
+-   [ElephantSQL](https://www.elephantsql.com) - Free 20 MB
+-   [Aiven](https://aiven.io) - Free Trial
 
 Siapkan credentials:
-- Host/Hostname
-- Port (default: 5432)
-- Database Name
-- Username
-- Password
+
+-   Host/Hostname
+-   Port (default: 5432)
+-   Database Name
+-   Username
+-   Password
 
 ### 4. Akun External Services
 
 #### Midtrans Account (Payment Gateway)
+
 1. Daftar di [https://dashboard.midtrans.com/register](https://dashboard.midtrans.com/register)
 2. Login dan pilih mode **Sandbox** untuk testing
 3. Catat credentials:
-   - **Server Key** (Settings → Access Keys)
-   - **Client Key** (Settings → Access Keys)
+    - **Server Key** (Settings → Access Keys)
+    - **Client Key** (Settings → Access Keys)
 
 #### Cloudinary Account (Image Storage)
+
 1. Daftar di [https://cloudinary.com/users/register/free](https://cloudinary.com/users/register/free)
 2. Login ke Dashboard
 3. Catat credentials:
-   - **Cloud Name**
-   - **API Key**
-   - **API Secret**
+    - **Cloud Name**
+    - **API Key**
+    - **API Secret**
 
 ## 🚀 Installation Guide
 
@@ -106,11 +118,13 @@ composer install
 ### Step 3: Setup Environment
 
 1. Copy file `.env.example` menjadi `.env`:
+
 ```bash
 cp .env.example .env
 ```
 
 2. Generate application key:
+
 ```bash
 php artisan key:generate
 ```
@@ -153,6 +167,7 @@ php artisan migrate
 ```
 
 Jika ingin reset database dan migrate ulang:
+
 ```bash
 php artisan migrate:fresh
 ```
@@ -181,10 +196,10 @@ Akses aplikasi di browser: [http://localhost:8000](http://localhost:8000)
 
 Gunakan credit card test dari Midtrans untuk testing pembayaran online:
 
-- **Card Number**: 4811 1111 1111 1114
-- **Exp Date**: 01/25 (atau bulan/tahun di masa depan)
-- **CVV**: 123
-- **OTP**: 112233
+-   **Card Number**: 4811 1111 1111 1114
+-   **Exp Date**: 01/25 (atau bulan/tahun di masa depan)
+-   **CVV**: 123
+-   **OTP**: 112233
 
 Lebih lengkap: [Midtrans Testing Payment](https://docs.midtrans.com/docs/testing-payment-on-sandbox)
 
@@ -221,42 +236,46 @@ ScanDine/
 
 Jika sudah run seeder, gunakan credentials berikut untuk login admin:
 
-- **Email**: admin@scandine.com
-- **Password**: password
+-   **Email**: admin@scandine.com
+-   **Password**: password
 
 ## 📊 Database Schema
 
 Project ini menggunakan 11 tabel utama:
-- `restaurants` - Data cafe/restoran
-- `tables` - Meja dengan QR code
-- `categories` - Kategori menu
-- `menu_items` - Item menu dengan gambar di Cloudinary
-- `modifier_groups` - Group modifier (Tingkat Kepedasan, Size, dll)
-- `modifier_items` - Item modifier (Tidak Pedas, Pedas, dll)
-- `menu_modifier_groups` - Pivot table menu & modifier
-- `orders` - Data pesanan
-- `order_items` - Detail item pesanan
-- `order_item_modifiers` - Modifier yang dipilih per item
-- `payments` - Data pembayaran dengan Midtrans tracking
+
+-   `restaurants` - Data cafe/restoran
+-   `tables` - Meja dengan QR code
+-   `categories` - Kategori menu
+-   `menu_items` - Item menu dengan gambar di Cloudinary
+-   `modifier_groups` - Group modifier (Tingkat Kepedasan, Size, dll)
+-   `modifier_items` - Item modifier (Tidak Pedas, Pedas, dll)
+-   `menu_modifier_groups` - Pivot table menu & modifier
+-   `orders` - Data pesanan
+-   `order_items` - Detail item pesanan
+-   `order_item_modifiers` - Modifier yang dipilih per item
+-   `payments` - Data pembayaran dengan Midtrans tracking
 
 Detail lengkap: lihat [DATABASE_RELATIONS.md](DATABASE_RELATIONS.md)
 
 ## 🔄 System Flowcharts
 
 Diagram lengkap alur sistem tersedia di [FLOWCHART.md](FLOWCHART.md):
-- Customer Order Flow
-- Backend Order Processing
-- Midtrans Payment Callback
-- Admin Order Management
-- QR Code Generation Flow
-- Cart Management Flow (localStorage)
-- Table Status Update Flow
-- Error Handling Flow
+
+-   Customer Order Flow
+-   Backend Order Processing
+-   Midtrans Payment Callback
+-   Admin Order Management
+-   QR Code Generation Flow
+-   Cart Management Flow (localStorage)
+-   Table Status Update Flow
+-   Error Handling Flow
 
 ## 🐛 Troubleshooting
 
 ### Error: "could not find driver"
+
 Install PHP PostgreSQL extension:
+
 ```bash
 # Ubuntu/Debian
 sudo apt-get install php8.2-pgsql
@@ -267,25 +286,33 @@ extension=pgsql
 ```
 
 ### Error: "Class 'Cloudinary' not found"
+
 Install Cloudinary package:
+
 ```bash
 composer require cloudinary-labs/cloudinary-laravel
 ```
 
 ### Error: "SimpleSoftwareIO\QrCode not found"
+
 Install QR Code package:
+
 ```bash
 composer require simplesoftwareio/simple-qrcode
 ```
 
 ### Error: Midtrans "Access Denied"
+
 Pastikan:
+
 1. Server Key dan Client Key benar
 2. `MIDTRANS_IS_PRODUCTION=false` untuk sandbox
 3. IP whitelisting di Midtrans dashboard (Settings → Access Keys)
 
 ### Error: Database Connection Failed
+
 Periksa:
+
 1. Credentials PostgreSQL di `.env` benar
 2. Database sudah dibuat
 3. Firewall allow koneksi ke database
@@ -294,27 +321,31 @@ Periksa:
 ## 📝 API Endpoints
 
 ### Customer Endpoints
-- `GET /menu?table={uuid}` - List menu dengan kategori
-- `GET /menu/{id}` - Detail menu item (JSON)
-- `POST /checkout` - Process checkout dari cart
+
+-   `GET /menu?table={uuid}` - List menu dengan kategori
+-   `GET /menu/{id}` - Detail menu item (JSON)
+-   `POST /checkout` - Process checkout dari cart
 
 ### Admin Endpoints (requires auth)
-- `GET /admin/dashboard` - Dashboard statistik
-- `GET /admin/orders` - List orders
-- `POST /admin/orders/{id}/status` - Update order status
-- `POST /admin/orders/{id}/confirm-payment` - Confirm cash payment
-- CRUD `/admin/tables` - Manage tables & QR codes
-- CRUD `/admin/categories` - Manage categories
-- CRUD `/admin/menu-items` - Manage menu items
-- CRUD `/admin/modifier-groups` - Manage modifier groups
-- CRUD `/admin/modifier-items` - Manage modifier items
+
+-   `GET /admin/dashboard` - Dashboard statistik
+-   `GET /admin/orders` - List orders
+-   `POST /admin/orders/{id}/status` - Update order status
+-   `POST /admin/orders/{id}/confirm-payment` - Confirm cash payment
+-   CRUD `/admin/tables` - Manage tables & QR codes
+-   CRUD `/admin/categories` - Manage categories
+-   CRUD `/admin/menu-items` - Manage menu items
+-   CRUD `/admin/modifier-groups` - Manage modifier groups
+-   CRUD `/admin/modifier-items` - Manage modifier items
 
 ### Webhook
-- `POST /payment/callback` - Midtrans payment notification
+
+-   `POST /payment/callback` - Midtrans payment notification
 
 ## 🤝 Contributing
 
 Contributions are welcome! Please:
+
 1. Fork the repository
 2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
 3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
@@ -328,16 +359,17 @@ This project is open-sourced software licensed under the [MIT license](https://o
 ## 👨‍💻 Developer
 
 **Your Name**
-- GitHub: [@yourusername](https://github.com/yourusername)
-- Email: your.email@example.com
+
+-   GitHub: [@yourusername](https://github.com/yourusername)
+-   Email: your.email@example.com
 
 ## 🙏 Acknowledgments
 
-- Laravel Framework
-- Midtrans Payment Gateway
-- Cloudinary CDN
-- SimpleSoftwareIO QR Code Generator
-- PostgreSQL Database
+-   Laravel Framework
+-   Midtrans Payment Gateway
+-   Cloudinary CDN
+-   SimpleSoftwareIO QR Code Generator
+-   PostgreSQL Database
 
 ---
 
