@@ -16,7 +16,7 @@ class MenuController extends Controller
     {
         // Validate table UUID
         $tableUuid = $request->query('table');
-        
+
         if (!$tableUuid) {
             abort(404, 'Table tidak ditemukan.');
         }

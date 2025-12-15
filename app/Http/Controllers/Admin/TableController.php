@@ -69,7 +69,7 @@ class TableController extends Controller
     public function destroy($id)
     {
         $table = Table::findOrFail($id);
-        
+
         // Check if table has active orders
         if ($table->activeOrders()->exists()) {
             return back()->with('error', 'Meja tidak dapat dihapus karena masih ada pesanan aktif.');
@@ -87,9 +87,9 @@ class TableController extends Controller
     public function downloadQrCode($id)
     {
         $table = Table::findOrFail($id);
-        
+
         $url = route('menu.index', ['table' => $table->uuid]);
-        
+
         $qrCode = QrCode::size(300)
             ->format('png')
             ->generate($url);

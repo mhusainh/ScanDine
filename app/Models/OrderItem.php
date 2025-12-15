@@ -53,7 +53,7 @@ class OrderItem extends Model
     public function calculateSubtotal(): float
     {
         $basePrice = $this->price * $this->quantity;
-        
+
         $modifiersTotal = $this->orderItemModifiers->sum(function ($modifier) {
             return $modifier->price * $modifier->quantity;
         });

@@ -27,7 +27,7 @@ class CheckoutController extends Controller
     public function store(StoreCheckoutRequest $request)
     {
         DB::beginTransaction();
-        
+
         try {
             // Get table
             $table = Table::where('uuid', $request->table_uuid)->firstOrFail();
@@ -36,13 +36,13 @@ class CheckoutController extends Controller
             $totalAmount = 0;
             foreach ($request->items as $item) {
                 $itemTotal = $item['price'] * $item['quantity'];
-                
+
                 if (isset($item['modifiers'])) {
                     foreach ($item['modifiers'] as $modifier) {
                         $itemTotal += $modifier['price'] * $modifier['quantity'];
                     }
                 }
-                
+
                 $totalAmount += $itemTotal;
             }
 
@@ -61,7 +61,7 @@ class CheckoutController extends Controller
             // Create order items
             foreach ($request->items as $item) {
                 $subtotal = $item['price'] * $item['quantity'];
-                
+
                 $orderItem = OrderItem::create([
                     'order_id' => $order->id,
                     'menu_item_id' => $item['menu_item_id'],
@@ -83,7 +83,7 @@ class CheckoutController extends Controller
 
                         $subtotal += $modifier['price'] * $modifier['quantity'];
                     }
-                    
+
                     // Update order item subtotal
                     $orderItem->update(['subtotal' => $subtotal]);
                 }
@@ -93,7 +93,7 @@ class CheckoutController extends Controller
             if ($request->payment_method == 'online') {
                 // Create Midtrans transaction
                 $snapToken = $this->midtransService->createTransaction($order);
-                
+
                 DB::commit();
 
                 return response()->json([
@@ -119,7 +119,6 @@ class CheckoutController extends Controller
                     'order' => $order->load('payment'),
                 ]);
             }
-
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Checkout error: ' . $e->getMessage());

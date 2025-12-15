@@ -107,7 +107,7 @@ class ModifierItemController extends Controller
         $modifierItem->update(['is_available' => !$modifierItem->is_available]);
 
         $status = $modifierItem->is_available ? 'tersedia' : 'tidak tersedia';
-        
+
         return back()->with('success', "Modifier Item berhasil diubah menjadi {$status}.");
     }
 }

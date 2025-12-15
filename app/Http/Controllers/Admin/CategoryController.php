@@ -97,7 +97,7 @@ class CategoryController extends Controller
         $category->update(['is_active' => !$category->is_active]);
 
         $status = $category->is_active ? 'diaktifkan' : 'dinonaktifkan';
-        
+
         return back()->with('success', "Kategori berhasil {$status}.");
     }
 }

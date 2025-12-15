@@ -14,7 +14,7 @@ class UpdateTableRequest extends FormRequest
     public function rules(): array
     {
         $tableId = $this->route('table');
-        
+
         return [
             'table_number' => 'required|string|unique:tables,table_number,' . $tableId,
             'status' => 'required|in:available,occupied,reserved',

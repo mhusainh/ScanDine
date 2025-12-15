@@ -22,7 +22,7 @@ class PaymentController extends Controller
     {
         try {
             $notification = $request->all();
-            
+
             Log::info('Midtrans callback received', $notification);
 
             // Convert array to object
@@ -35,7 +35,6 @@ class PaymentController extends Controller
             }
 
             return response()->json(['message' => 'Callback handling failed'], 400);
-
         } catch (\Exception $e) {
             Log::error('Payment callback error: ' . $e->getMessage());
             return response()->json(['message' => 'Internal server error'], 500);
@@ -48,7 +47,7 @@ class PaymentController extends Controller
     public function finish(Request $request)
     {
         $orderId = $request->query('order_id');
-        
+
         return view('payment.finish', [
             'message' => 'Pembayaran berhasil! Terima kasih.',
             'order_id' => $orderId
