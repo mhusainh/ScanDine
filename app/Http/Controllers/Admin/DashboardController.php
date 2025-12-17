@@ -37,6 +37,6 @@ class DashboardController extends Controller
             ->groupBy('status')
             ->get();
 
-        return view('admin.dashboard', compact('stats', 'recentOrders', 'ordersByStatus'));
+        return response()->json(compact('stats', 'recentOrders', 'ordersByStatus'));
     }
 }

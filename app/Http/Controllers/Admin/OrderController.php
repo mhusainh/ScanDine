@@ -16,24 +16,18 @@ class OrderController extends Controller
     {
         $query = Order::with(['table', 'orderItems.menuItem', 'payment']);
 
-        // Filter by status
+        // Filter by status (default: show active orders for KDS)
         if ($request->has('status') && $request->status != '') {
             $query->where('status', $request->status);
+        } else {
+            // Default KDS view: pending, cooking, ready
+            $query->whereIn('status', ['pending', 'cooking', 'ready', 'confirmed']);
         }
 
-        // Filter by payment status
-        if ($request->has('payment_status') && $request->payment_status != '') {
-            $query->where('payment_status', $request->payment_status);
-        }
+        $orders = $query->orderBy('created_at', 'asc')->get();
 
-        // Filter by date
-        if ($request->has('date') && $request->date != '') {
-            $query->whereDate('created_at', $request->date);
-        }
-
-        $orders = $query->latest()->paginate(20);
-
-        return view('admin.orders.index', compact('orders'));
+        // Transform for frontend if needed, but standard JSON is usually fine
+        return response()->json($orders);
     }
 
     /**
@@ -48,7 +42,7 @@ class OrderController extends Controller
             'payment'
         ])->findOrFail($id);
 
-        return view('admin.orders.show', compact('order'));
+        return response()->json($order);
     }
 
     /**
@@ -57,7 +51,7 @@ class OrderController extends Controller
     public function updateStatus(Request $request, $id)
     {
         $request->validate([
-            'status' => 'required|in:pending,confirmed,preparing,served,completed,cancelled'
+            'status' => 'required|in:pending,confirmed,cooking,ready,served,completed,cancelled'
         ]);
 
         $order = Order::findOrFail($id);
@@ -74,35 +68,10 @@ class OrderController extends Controller
             }
         }
 
-        return back()->with('success', 'Status order berhasil diupdate.');
-    }
-
-    /**
-     * Confirm payment for cash orders
-     */
-    public function confirmPayment($id)
-    {
-        $order = Order::with('payment')->findOrFail($id);
-
-        if ($order->payment_method == 'cash' && $order->payment_status == 'unpaid') {
-            $order->update([
-                'payment_status' => 'paid',
-                'status' => 'confirmed'
-            ]);
-
-            $order->payment->update([
-                'payment_status' => 'settlement',
-                'paid_at' => now()
-            ]);
-
-            // Update table status to occupied if not already
-            if ($order->table->status !== 'occupied') {
-                $order->table->update(['status' => 'occupied']);
-            }
-
-            return back()->with('success', 'Pembayaran cash berhasil dikonfirmasi.');
-        }
-
-        return back()->with('error', 'Order ini tidak dapat dikonfirmasi pembayarannya.');
+        return response()->json([
+            'success' => true,
+            'message' => 'Status updated',
+            'order' => $order
+        ]);
     }
 }

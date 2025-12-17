@@ -12,10 +12,12 @@ class MenuController extends Controller
     /**
      * Display menu for customer (from QR scan)
      */
-    public function index(Request $request)
+    public function index(Request $request, $tableUuid = null)
     {
         // Validate table UUID
-        $tableUuid = $request->query('table');
+        if (!$tableUuid) {
+            $tableUuid = $request->query('table');
+        }
 
         if (!$tableUuid) {
             abort(404, 'Table tidak ditemukan.');
