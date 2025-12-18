@@ -1,0 +1,70 @@
+<?php
+
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\MenuController;
+use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\CheckoutController;
+use App\Http\Controllers\Api\PaymentController;
+use App\Http\Controllers\Api\Admin\DashboardController;
+use App\Http\Controllers\Api\Admin\OrderController;
+use App\Http\Controllers\Api\Admin\TableController;
+use App\Http\Controllers\Api\Admin\CategoryController;
+use App\Http\Controllers\Api\Admin\MenuItemController;
+use App\Http\Controllers\Api\Admin\ModifierGroupController;
+use App\Http\Controllers\Api\Admin\ModifierItemController;
+
+// Public Routes
+Route::prefix('v1')->group(function () {
+    // Auth
+    Route::post('/login', [AuthController::class, 'login']);
+    Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
+    Route::get('/me', [AuthController::class, 'me'])->middleware('auth:sanctum');
+
+    // Customer Menu (Public)
+    Route::get('/tables/list', [TableController::class, 'publicList']);
+    Route::get('/menu', [MenuController::class, 'index']);
+    Route::get('/menu/{id}', [MenuController::class, 'show']);
+
+    // Checkout (Public)
+    Route::post('/checkout', [CheckoutController::class, 'store']);
+
+    // Payment Callback (Midtrans Webhook)
+    Route::post('/payment/callback', [PaymentController::class, 'callback']);
+});
+
+// Admin Routes (Protected)
+Route::prefix('v1/admin')->middleware('auth:sanctum')->group(function () {
+    // Dashboard
+    Route::get('/dashboard', [DashboardController::class, 'index']);
+
+    // Orders
+    Route::get('/orders', [OrderController::class, 'index']);
+    Route::get('/orders/{id}', [OrderController::class, 'show']);
+    Route::patch('/orders/{id}/status', [OrderController::class, 'updateStatus']);
+    Route::post('/orders/{id}/confirm-payment', [OrderController::class, 'confirmPayment']);
+
+    // Tables
+    Route::apiResource('tables', TableController::class);
+    Route::get('/tables/{id}/qr-code', [TableController::class, 'generateQrCode']);
+    Route::get('/tables/{id}/qr-code/download', [TableController::class, 'downloadQrCode']);
+
+    // Categories
+    Route::apiResource('categories', CategoryController::class);
+
+    // Menu Items
+    Route::apiResource('menu-items', MenuItemController::class);
+    Route::post('/menu-items/{id}/toggle-available', [MenuItemController::class, 'toggleAvailable']);
+    Route::delete('/menu-items/{id}/image', [MenuItemController::class, 'deleteImage']);
+
+    // Modifier Groups
+    Route::apiResource('modifier-groups', ModifierGroupController::class);
+
+    // Modifier Items (nested under modifier groups)
+    Route::get('/modifier-groups/{modifierGroupId}/items', [ModifierItemController::class, 'index']);
+    Route::post('/modifier-groups/{modifierGroupId}/items', [ModifierItemController::class, 'store']);
+    Route::get('/modifier-groups/{modifierGroupId}/items/{id}', [ModifierItemController::class, 'show']);
+    Route::put('/modifier-groups/{modifierGroupId}/items/{id}', [ModifierItemController::class, 'update']);
+    Route::delete('/modifier-groups/{modifierGroupId}/items/{id}', [ModifierItemController::class, 'destroy']);
+    Route::post('/modifier-groups/{modifierGroupId}/items/{id}/toggle-available', [ModifierItemController::class, 'toggleAvailable']);
+});
