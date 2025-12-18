@@ -18,10 +18,10 @@ class AuthController extends Controller
 
         if (Auth::attempt($credentials)) {
             $user = Auth::user();
-            
+
             // Create token
             $token = $user->createToken('auth-token')->plainTextToken;
-            
+
             return response()->json([
                 'success' => true,
                 'message' => 'Login berhasil',
@@ -49,7 +49,7 @@ class AuthController extends Controller
     {
         // Delete current token
         $request->user()->currentAccessToken()->delete();
-        
+
         return response()->json([
             'success' => true,
             'message' => 'Logout berhasil'

@@ -56,7 +56,7 @@ class MenuItemSeeder extends Seeder
 
         foreach ($categories as $category) {
             $templates = $menuTemplates[$category->name] ?? [];
-            
+
             // Create 20 items per category
             for ($i = 1; $i <= 20; $i++) {
                 // Use template if available, otherwise generate generic

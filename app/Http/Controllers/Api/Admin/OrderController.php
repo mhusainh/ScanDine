@@ -33,20 +33,20 @@ class OrderController extends Controller
         // Search by order number, customer name, table uuid, or menu name
         if ($request->has('search') && $request->search != '') {
             $search = $request->search;
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 // Search order number
                 $q->where('order_number', 'ILIKE', '%' . $search . '%')
-                  // Search customer name
-                  ->orWhere('customer_name', 'ILIKE', '%' . $search . '%')
-                  // Search table uuid or table number
-                  ->orWhereHas('table', function($tableQuery) use ($search) {
-                      $tableQuery->where('uuid', 'ILIKE', '%' . $search . '%')
-                                 ->orWhere('table_number', 'ILIKE', '%' . $search . '%');
-                  })
-                  // Search menu item name
-                  ->orWhereHas('orderItems.menuItem', function($menuQuery) use ($search) {
-                      $menuQuery->where('name', 'ILIKE', '%' . $search . '%');
-                  });
+                    // Search customer name
+                    ->orWhere('customer_name', 'ILIKE', '%' . $search . '%')
+                    // Search table uuid or table number
+                    ->orWhereHas('table', function ($tableQuery) use ($search) {
+                        $tableQuery->where('uuid', 'ILIKE', '%' . $search . '%')
+                            ->orWhere('table_number', 'ILIKE', '%' . $search . '%');
+                    })
+                    // Search menu item name
+                    ->orWhereHas('orderItems.menuItem', function ($menuQuery) use ($search) {
+                        $menuQuery->where('name', 'ILIKE', '%' . $search . '%');
+                    });
             });
         }
 
@@ -116,7 +116,7 @@ class OrderController extends Controller
         // If completed, set completed_at and table to available
         if ($request->status == 'completed') {
             $order->update(['completed_at' => now()]);
-            
+
             // Check if table has other active orders
             $hasActiveOrders = $order->table->activeOrders()->where('id', '!=', $order->id)->exists();
             if (!$hasActiveOrders) {

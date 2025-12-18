@@ -75,7 +75,7 @@ class OrderSeeder extends Seeder
                         $modifierGroup = $menuItem->modifierGroups->random();
                         if ($modifierGroup->modifierItems->count() > 0) {
                             $modifierItem = $modifierGroup->modifierItems->random();
-                            
+
                             OrderItemModifier::create([
                                 'order_item_id' => $orderItem->id,
                                 'modifier_item_id' => $modifierItem->id,

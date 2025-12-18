@@ -57,7 +57,7 @@ class DashboardController extends Controller
 
         $popularMenuItems = MenuItem::whereIn('id', $popularItems->pluck('menu_item_id'))
             ->get()
-            ->map(function($item) use ($popularItems) {
+            ->map(function ($item) use ($popularItems) {
                 $stat = $popularItems->firstWhere('menu_item_id', $item->id);
                 return [
                     'id' => $item->id,

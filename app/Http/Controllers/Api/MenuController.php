@@ -17,7 +17,7 @@ class MenuController extends Controller
     {
         // Validate table UUID
         $tableUuid = $request->query('table');
-        
+
         if (!$tableUuid) {
             return response()->json([
                 'success' => false,
@@ -51,26 +51,26 @@ class MenuController extends Controller
 
         // Get categories with menu items
         $categoriesQuery = Category::active();
-        
+
         // Filter by specific category if provided
         if ($categoryId) {
             $categoriesQuery->where('id', $categoryId);
         }
 
         $categories = $categoriesQuery
-            ->with(['menuItems' => function($query) use ($search, $minPrice, $maxPrice, $available) {
+            ->with(['menuItems' => function ($query) use ($search, $minPrice, $maxPrice, $available) {
                 // Filter by availability (default: only available items)
                 if ($available !== null && $available !== '') {
                     $query->where('is_available', $available == 1);
                 } else {
                     $query->where('is_available', true);
                 }
-                
+
                 // Apply search filter
                 if ($search) {
-                    $query->where(function($q) use ($search) {
+                    $query->where(function ($q) use ($search) {
                         $q->where('name', 'ILIKE', '%' . $search . '%')
-                          ->orWhere('description', 'ILIKE', '%' . $search . '%');
+                            ->orWhere('description', 'ILIKE', '%' . $search . '%');
                     });
                 }
 
@@ -83,13 +83,13 @@ class MenuController extends Controller
                 if ($maxPrice !== null && $maxPrice !== '') {
                     $query->where('price', '<=', $maxPrice);
                 }
-                
-                $query->with(['modifierGroups' => function($q) {
-                        $q->with(['modifierItems' => function($mq) {
-                            $mq->where('is_available', true)
-                                ->orderBy('sort_order');
-                        }])->orderBy('sort_order');
-                    }])
+
+                $query->with(['modifierGroups' => function ($q) {
+                    $q->with(['modifierItems' => function ($mq) {
+                        $mq->where('is_available', true)
+                            ->orderBy('sort_order');
+                    }])->orderBy('sort_order');
+                }])
                     ->orderBy('sort_order');
             }])
             ->ordered()
@@ -115,8 +115,8 @@ class MenuController extends Controller
     {
         $menuItem = MenuItem::with([
             'category',
-            'modifierGroups' => function($query) {
-                $query->with(['modifierItems' => function($q) {
+            'modifierGroups' => function ($query) {
+                $query->with(['modifierItems' => function ($q) {
                     $q->where('is_available', true)
                         ->orderBy('sort_order');
                 }])->orderBy('sort_order');

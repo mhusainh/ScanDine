@@ -51,7 +51,7 @@ class ModifierItemSeeder extends Seeder
 
         foreach ($groups as $group) {
             $items = $modifierItems[$group->name] ?? [];
-            
+
             foreach ($items as $item) {
                 ModifierItem::create([
                     'modifier_group_id' => $group->id,

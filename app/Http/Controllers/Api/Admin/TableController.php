@@ -73,7 +73,7 @@ class TableController extends Controller
      */
     public function show($id)
     {
-        $table = Table::with(['orders' => function($query) {
+        $table = Table::with(['orders' => function ($query) {
             $query->whereIn('status', ['pending', 'confirmed', 'preparing', 'served'])
                 ->latest();
         }])->find($id);
@@ -127,7 +127,7 @@ class TableController extends Controller
                 'message' => 'Meja tidak ditemukan'
             ], 404);
         }
-        
+
         // Check if table has active orders
         if ($table->activeOrders()->exists()) {
             return response()->json([
