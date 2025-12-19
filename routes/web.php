@@ -17,6 +17,26 @@ Route::get('/api/menu', [MenuController::class, 'index']);
 Route::prefix('api/admin')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index']);
     
+    // Categories
+    Route::get('/categories', [CategoryController::class, 'apiIndex']);
+    Route::post('/categories', [CategoryController::class, 'apiStore']);
+    Route::put('/categories/{id}', [CategoryController::class, 'apiUpdate']);
+    Route::delete('/categories/{id}', [CategoryController::class, 'apiDestroy']);
+    Route::post('/categories/{id}/toggle-active', [CategoryController::class, 'apiToggleActive']);
+
+    // Modifier Groups
+    Route::get('/modifier-groups', [ModifierGroupController::class, 'apiIndex']);
+    Route::post('/modifier-groups', [ModifierGroupController::class, 'apiStore']);
+    Route::put('/modifier-groups/{id}', [ModifierGroupController::class, 'apiUpdate']);
+    Route::delete('/modifier-groups/{id}', [ModifierGroupController::class, 'apiDestroy']);
+
+    // Modifier Items
+    Route::get('/modifier-groups/{modifierGroup}/modifier-items', [ModifierItemController::class, 'apiIndex']);
+    Route::post('/modifier-groups/{modifierGroup}/modifier-items', [ModifierItemController::class, 'apiStore']);
+    Route::put('/modifier-groups/{modifierGroup}/modifier-items/{modifierItem}', [ModifierItemController::class, 'apiUpdate']);
+    Route::delete('/modifier-groups/{modifierGroup}/modifier-items/{modifierItem}', [ModifierItemController::class, 'apiDestroy']);
+    Route::post('/modifier-groups/{modifierGroup}/modifier-items/{modifierItem}/toggle-available', [ModifierItemController::class, 'apiToggleAvailable']);
+
     // Orders
     Route::get('/orders', [OrderController::class, 'index']);
     Route::get('/orders/{id}', [OrderController::class, 'show']);

@@ -1,5 +1,13 @@
 import React, { useState, useEffect } from "react";
-import { TrendingUp, Users, ShoppingBag, DollarSign } from "lucide-react";
+import { Link } from "react-router-dom";
+import {
+    TrendingUp,
+    Users,
+    ShoppingBag,
+    DollarSign,
+    ArrowUpRight,
+    ArrowDownRight,
+} from "lucide-react";
 import axios from "axios";
 
 const StatCard = ({ title, value, icon: Icon, color, trend }) => (
@@ -10,10 +18,26 @@ const StatCard = ({ title, value, icon: Icon, color, trend }) => (
             >
                 <Icon size={24} className="text-white" />
             </div>
-            {/* Trend functionality can be added later */}
+            {trend !== undefined && (
+                <div
+                    className={`flex items-center text-sm font-medium ${
+                        trend >= 0 ? "text-green-600" : "text-red-600"
+                    }`}
+                >
+                    {trend >= 0 ? (
+                        <ArrowUpRight size={16} />
+                    ) : (
+                        <ArrowDownRight size={16} />
+                    )}
+                    <span className="ml-1">{Math.abs(trend)}%</span>
+                </div>
+            )}
         </div>
         <h3 className="text-stone-500 text-sm font-medium">{title}</h3>
         <p className="text-2xl font-bold text-stone-800 mt-1">{value}</p>
+        {trend !== undefined && (
+            <p className="text-xs text-stone-400 mt-1">vs yesterday</p>
+        )}
     </div>
 );
 
@@ -24,6 +48,8 @@ const AdminDashboard = () => {
             pending_orders: 0,
             today_revenue: 0,
             active_tables: 0,
+            orders_trend: 0,
+            revenue_trend: 0,
         },
         recentOrders: [],
     });
@@ -78,12 +104,14 @@ const AdminDashboard = () => {
                     ).toLocaleString("id-ID")}`}
                     icon={DollarSign}
                     color="bg-amber-600"
+                    trend={data.stats.revenue_trend}
                 />
                 <StatCard
                     title="Orders Today"
                     value={data.stats.today_orders}
                     icon={ShoppingBag}
                     color="bg-blue-600"
+                    trend={data.stats.orders_trend}
                 />
                 <StatCard
                     title="Pending Orders"
@@ -105,9 +133,12 @@ const AdminDashboard = () => {
                     <h2 className="font-bold text-lg text-stone-800">
                         Recent Orders
                     </h2>
-                    <button className="text-amber-600 font-medium text-sm hover:underline">
+                    <Link
+                        to="/admin/orders"
+                        className="text-amber-600 font-medium text-sm hover:underline"
+                    >
                         View All
-                    </button>
+                    </Link>
                 </div>
                 <div className="overflow-x-auto">
                     <table className="w-full">

@@ -1,10 +1,20 @@
 import React, { useState, useEffect } from "react";
-import { Plus, Edit2, Trash2, Search, X } from "lucide-react";
+import {
+    Plus,
+    Edit2,
+    Trash2,
+    Search,
+    X,
+    Power,
+    Loader2,
+    Image as ImageIcon,
+} from "lucide-react";
 import axios from "axios";
 
 const AdminMenu = () => {
     const [products, setProducts] = useState([]);
     const [categories, setCategories] = useState([]);
+    const [modifierGroups, setModifierGroups] = useState([]);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState("");
     const [selectedCategory, setSelectedCategory] = useState("");
@@ -19,8 +29,12 @@ const AdminMenu = () => {
         description: "",
         is_available: true,
         image: null,
+        modifier_groups: [],
     });
+    const [imagePreview, setImagePreview] = useState(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
+
+    const [processingId, setProcessingId] = useState(null);
 
     // Pagination state
     const [currentPage, setCurrentPage] = useState(1);
@@ -28,6 +42,7 @@ const AdminMenu = () => {
 
     useEffect(() => {
         fetchMenuData();
+        fetchModifierGroups();
     }, [currentPage, search, selectedCategory]);
 
     const fetchMenuData = async () => {
@@ -52,7 +67,18 @@ const AdminMenu = () => {
         }
     };
 
+    const fetchModifierGroups = async () => {
+        try {
+            const response = await axios.get("/api/admin/modifier-groups");
+            setModifierGroups(response.data);
+        } catch (error) {
+            console.error("Error fetching modifier groups:", error);
+        }
+    };
+
     const toggleAvailability = async (id) => {
+        if (processingId) return;
+        setProcessingId(id);
         try {
             await axios.post(`/api/admin/menu-items/${id}/toggle-availability`);
             setProducts(
@@ -63,6 +89,8 @@ const AdminMenu = () => {
         } catch (error) {
             console.error("Error toggling availability:", error);
             alert("Failed to update availability");
+        } finally {
+            setProcessingId(null);
         }
     };
 
@@ -70,12 +98,17 @@ const AdminMenu = () => {
         if (!window.confirm("Are you sure you want to delete this item?"))
             return;
 
+        if (processingId) return;
+        setProcessingId(id);
+
         try {
             await axios.delete(`/api/admin/menu-items/${id}`);
             setProducts(products.filter((p) => p.id !== id));
         } catch (error) {
             console.error("Error deleting item:", error);
             alert("Failed to delete item");
+        } finally {
+            setProcessingId(null);
         }
     };
 
@@ -89,7 +122,11 @@ const AdminMenu = () => {
                 description: product.description || "",
                 is_available: Boolean(product.is_available),
                 image: null,
+                modifier_groups: product.modifier_groups
+                    ? product.modifier_groups.map((g) => g.id)
+                    : [],
             });
+            setImagePreview(product.url_file);
         } else {
             setEditingProduct(null);
             setFormData({
@@ -99,9 +136,34 @@ const AdminMenu = () => {
                 description: "",
                 is_available: true,
                 image: null,
+                modifier_groups: [],
             });
+            setImagePreview(null);
         }
         setIsModalOpen(true);
+    };
+
+    const handleImageChange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            setFormData({ ...formData, image: file });
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setImagePreview(reader.result);
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
+    const handleModifierGroupChange = (groupId) => {
+        const currentGroups = [...formData.modifier_groups];
+        const index = currentGroups.indexOf(groupId);
+        if (index > -1) {
+            currentGroups.splice(index, 1);
+        } else {
+            currentGroups.push(groupId);
+        }
+        setFormData({ ...formData, modifier_groups: currentGroups });
     };
 
     const handleSubmit = async (e) => {
@@ -116,6 +178,15 @@ const AdminMenu = () => {
         data.append("is_available", formData.is_available ? "1" : "0");
         if (formData.image) {
             data.append("image", formData.image);
+        }
+
+        // Append modifier groups
+        if (formData.modifier_groups.length > 0) {
+            // If the backend expects an array, we might need to append differently
+            // But based on typical Laravel handling with FormData, we can join them or append multiple times
+            // The controller code I saw earlier: $request->modifier_groups can be string (explode) or array
+            // Let's send it as a comma-separated string for simplicity with FormData
+            data.append("modifier_groups", formData.modifier_groups.join(","));
         }
 
         try {
@@ -168,8 +239,8 @@ const AdminMenu = () => {
             {/* Modal */}
             {isModalOpen && (
                 <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-                    <div className="bg-white rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
-                        <div className="p-6 border-b border-stone-100 flex justify-between items-center sticky top-0 bg-white">
+                    <div className="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+                        <div className="p-6 border-b border-stone-100 flex justify-between items-center sticky top-0 bg-white z-10">
                             <h2 className="text-xl font-bold text-stone-800">
                                 {editingProduct
                                     ? "Edit Menu Item"
@@ -183,132 +254,205 @@ const AdminMenu = () => {
                             </button>
                         </div>
 
-                        <form onSubmit={handleSubmit} className="p-6 space-y-4">
-                            <div>
-                                <label className="block text-sm font-medium text-stone-700 mb-1">
-                                    Name
-                                </label>
-                                <input
-                                    type="text"
-                                    required
-                                    value={formData.name}
-                                    onChange={(e) =>
-                                        setFormData({
-                                            ...formData,
-                                            name: e.target.value,
-                                        })
-                                    }
-                                    className="w-full px-4 py-2 rounded-xl border border-stone-200 focus:outline-none focus:ring-2 focus:ring-amber-500"
-                                />
-                            </div>
+                        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div className="space-y-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-stone-700 mb-1">
+                                            Name
+                                        </label>
+                                        <input
+                                            type="text"
+                                            required
+                                            value={formData.name}
+                                            onChange={(e) =>
+                                                setFormData({
+                                                    ...formData,
+                                                    name: e.target.value,
+                                                })
+                                            }
+                                            className="w-full px-4 py-2 rounded-xl border border-stone-200 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                                        />
+                                    </div>
 
-                            <div>
-                                <label className="block text-sm font-medium text-stone-700 mb-1">
-                                    Category
-                                </label>
-                                <select
-                                    required
-                                    value={formData.category_id}
-                                    onChange={(e) =>
-                                        setFormData({
-                                            ...formData,
-                                            category_id: e.target.value,
-                                        })
-                                    }
-                                    className="w-full px-4 py-2 rounded-xl border border-stone-200 focus:outline-none focus:ring-2 focus:ring-amber-500 bg-white"
-                                >
-                                    <option value="">Select Category</option>
-                                    {categories.map((cat) => (
-                                        <option key={cat.id} value={cat.id}>
-                                            {cat.name}
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-stone-700 mb-1">
+                                            Category
+                                        </label>
+                                        <select
+                                            required
+                                            value={formData.category_id}
+                                            onChange={(e) =>
+                                                setFormData({
+                                                    ...formData,
+                                                    category_id: e.target.value,
+                                                })
+                                            }
+                                            className="w-full px-4 py-2 rounded-xl border border-stone-200 focus:outline-none focus:ring-2 focus:ring-amber-500 bg-white"
+                                        >
+                                            <option value="">
+                                                Select Category
+                                            </option>
+                                            {categories.map((cat) => (
+                                                <option
+                                                    key={cat.id}
+                                                    value={cat.id}
+                                                >
+                                                    {cat.name}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
 
-                            <div>
-                                <label className="block text-sm font-medium text-stone-700 mb-1">
-                                    Price
-                                </label>
-                                <div className="relative">
-                                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-500">
-                                        Rp
-                                    </span>
-                                    <input
-                                        type="number"
-                                        required
-                                        min="0"
-                                        value={formData.price}
-                                        onChange={(e) =>
-                                            setFormData({
-                                                ...formData,
-                                                price: e.target.value,
-                                            })
-                                        }
-                                        className="w-full pl-10 pr-4 py-2 rounded-xl border border-stone-200 focus:outline-none focus:ring-2 focus:ring-amber-500"
-                                    />
+                                    <div>
+                                        <label className="block text-sm font-medium text-stone-700 mb-1">
+                                            Price
+                                        </label>
+                                        <div className="relative">
+                                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-500">
+                                                Rp
+                                            </span>
+                                            <input
+                                                type="number"
+                                                required
+                                                min="0"
+                                                value={formData.price}
+                                                onChange={(e) =>
+                                                    setFormData({
+                                                        ...formData,
+                                                        price: e.target.value,
+                                                    })
+                                                }
+                                                className="w-full pl-10 pr-4 py-2 rounded-xl border border-stone-200 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-medium text-stone-700 mb-1">
+                                            Description
+                                        </label>
+                                        <textarea
+                                            rows="3"
+                                            value={formData.description}
+                                            onChange={(e) =>
+                                                setFormData({
+                                                    ...formData,
+                                                    description: e.target.value,
+                                                })
+                                            }
+                                            className="w-full px-4 py-2 rounded-xl border border-stone-200 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="space-y-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-stone-700 mb-1">
+                                            Image
+                                        </label>
+                                        <div className="border-2 border-dashed border-stone-200 rounded-xl p-4 text-center hover:bg-stone-50 transition-colors relative">
+                                            <input
+                                                type="file"
+                                                accept="image/*"
+                                                onChange={handleImageChange}
+                                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                            />
+                                            {imagePreview ? (
+                                                <div className="relative h-40 w-full">
+                                                    <img
+                                                        src={imagePreview}
+                                                        alt="Preview"
+                                                        className="w-full h-full object-contain rounded-lg"
+                                                    />
+                                                </div>
+                                            ) : (
+                                                <div className="flex flex-col items-center justify-center py-8 text-stone-400">
+                                                    <ImageIcon
+                                                        size={32}
+                                                        className="mb-2"
+                                                    />
+                                                    <span className="text-sm">
+                                                        Click to upload image
+                                                    </span>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-medium text-stone-700 mb-2">
+                                            Modifier Groups
+                                        </label>
+                                        <div className="border border-stone-200 rounded-xl p-4 max-h-48 overflow-y-auto space-y-2">
+                                            {modifierGroups.length === 0 ? (
+                                                <p className="text-sm text-stone-400 text-center">
+                                                    No modifier groups available
+                                                </p>
+                                            ) : (
+                                                modifierGroups.map((group) => (
+                                                    <div
+                                                        key={group.id}
+                                                        className="flex items-center"
+                                                    >
+                                                        <input
+                                                            type="checkbox"
+                                                            id={`group-${group.id}`}
+                                                            checked={formData.modifier_groups.includes(
+                                                                group.id
+                                                            )}
+                                                            onChange={() =>
+                                                                handleModifierGroupChange(
+                                                                    group.id
+                                                                )
+                                                            }
+                                                            className="w-4 h-4 text-amber-600 rounded focus:ring-amber-500"
+                                                        />
+                                                        <label
+                                                            htmlFor={`group-${group.id}`}
+                                                            className="ml-2 text-sm text-stone-700 cursor-pointer"
+                                                        >
+                                                            {group.name}
+                                                            <span className="text-xs text-stone-400 ml-1">
+                                                                (
+                                                                {group.type ===
+                                                                "single"
+                                                                    ? "Pick 1"
+                                                                    : "Pick Many"}
+                                                                )
+                                                            </span>
+                                                        </label>
+                                                    </div>
+                                                ))
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    <div className="flex items-center space-x-2">
+                                        <input
+                                            type="checkbox"
+                                            id="is_available"
+                                            checked={formData.is_available}
+                                            onChange={(e) =>
+                                                setFormData({
+                                                    ...formData,
+                                                    is_available:
+                                                        e.target.checked,
+                                                })
+                                            }
+                                            className="w-4 h-4 text-amber-600 rounded focus:ring-amber-500"
+                                        />
+                                        <label
+                                            htmlFor="is_available"
+                                            className="text-sm font-medium text-stone-700"
+                                        >
+                                            Available for Order
+                                        </label>
+                                    </div>
                                 </div>
                             </div>
 
-                            <div>
-                                <label className="block text-sm font-medium text-stone-700 mb-1">
-                                    Description
-                                </label>
-                                <textarea
-                                    rows="3"
-                                    value={formData.description}
-                                    onChange={(e) =>
-                                        setFormData({
-                                            ...formData,
-                                            description: e.target.value,
-                                        })
-                                    }
-                                    className="w-full px-4 py-2 rounded-xl border border-stone-200 focus:outline-none focus:ring-2 focus:ring-amber-500"
-                                />
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-medium text-stone-700 mb-1">
-                                    Image
-                                </label>
-                                <input
-                                    type="file"
-                                    accept="image/*"
-                                    onChange={(e) =>
-                                        setFormData({
-                                            ...formData,
-                                            image: e.target.files[0],
-                                        })
-                                    }
-                                    className="w-full px-4 py-2 rounded-xl border border-stone-200 focus:outline-none focus:ring-2 focus:ring-amber-500"
-                                />
-                                <p className="text-xs text-stone-500 mt-1">
-                                    Leave empty to keep current image
-                                </p>
-                            </div>
-
-                            <div className="flex items-center space-x-2">
-                                <input
-                                    type="checkbox"
-                                    id="is_available"
-                                    checked={formData.is_available}
-                                    onChange={(e) =>
-                                        setFormData({
-                                            ...formData,
-                                            is_available: e.target.checked,
-                                        })
-                                    }
-                                    className="w-4 h-4 text-amber-600 rounded focus:ring-amber-500"
-                                />
-                                <label
-                                    htmlFor="is_available"
-                                    className="text-sm font-medium text-stone-700"
-                                >
-                                    Available for Order
-                                </label>
-                            </div>
-
-                            <div className="pt-4 flex space-x-3">
+                            <div className="pt-4 flex space-x-3 border-t border-stone-100">
                                 <button
                                     type="button"
                                     onClick={() => setIsModalOpen(false)}
@@ -436,15 +580,28 @@ const AdminMenu = () => {
                                                         product.id
                                                     )
                                                 }
-                                                className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
+                                                disabled={
+                                                    processingId === product.id
+                                                }
+                                                className={`px-3 py-1 rounded-full text-xs font-medium border flex items-center space-x-1 disabled:opacity-50 disabled:cursor-not-allowed ${
                                                     product.is_available
-                                                        ? "bg-green-100 text-green-700 border-green-200 hover:bg-green-200"
-                                                        : "bg-red-100 text-red-700 border-red-200 hover:bg-red-200"
+                                                        ? "bg-green-100 text-green-700 border-green-200"
+                                                        : "bg-red-100 text-red-700 border-red-200"
                                                 }`}
                                             >
-                                                {product.is_available
-                                                    ? "Available"
-                                                    : "Unavailable"}
+                                                {processingId === product.id ? (
+                                                    <Loader2
+                                                        size={12}
+                                                        className="animate-spin"
+                                                    />
+                                                ) : (
+                                                    <Power size={12} />
+                                                )}
+                                                <span>
+                                                    {product.is_available
+                                                        ? "Available"
+                                                        : "Unavailable"}
+                                                </span>
                                             </button>
                                         </td>
                                         <td className="px-6 py-4 text-right">
@@ -453,7 +610,11 @@ const AdminMenu = () => {
                                                     onClick={() =>
                                                         handleOpenModal(product)
                                                     }
-                                                    className="p-2 hover:bg-stone-100 rounded-lg text-stone-500 hover:text-amber-600 transition-colors"
+                                                    disabled={
+                                                        processingId ===
+                                                        product.id
+                                                    }
+                                                    className="p-2 hover:bg-stone-100 rounded-lg text-stone-500 hover:text-amber-600 disabled:opacity-50"
                                                 >
                                                     <Edit2 size={18} />
                                                 </button>
@@ -461,9 +622,21 @@ const AdminMenu = () => {
                                                     onClick={() =>
                                                         handleDelete(product.id)
                                                     }
-                                                    className="p-2 hover:bg-red-50 rounded-lg text-stone-500 hover:text-red-600 transition-colors"
+                                                    disabled={
+                                                        processingId ===
+                                                        product.id
+                                                    }
+                                                    className="p-2 hover:bg-red-50 rounded-lg text-stone-500 hover:text-red-600 disabled:opacity-50"
                                                 >
-                                                    <Trash2 size={18} />
+                                                    {processingId ===
+                                                    product.id ? (
+                                                        <Loader2
+                                                            size={18}
+                                                            className="animate-spin"
+                                                        />
+                                                    ) : (
+                                                        <Trash2 size={18} />
+                                                    )}
                                                 </button>
                                             </div>
                                         </td>

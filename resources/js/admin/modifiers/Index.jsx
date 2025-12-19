@@ -1,15 +1,27 @@
 import React, { useState, useEffect } from "react";
-import { Plus, Edit2, Trash2, Layers, Search, X } from "lucide-react";
+import {
+    Plus,
+    Edit2,
+    Trash2,
+    Layers,
+    ChevronDown,
+    ChevronRight,
+    X,
+    DollarSign,
+    Loader2,
+} from "lucide-react";
 import axios from "axios";
-import submitToBlade from "../../global_components/BladeForm/submitToBlade";
 
 const AdminModifiers = () => {
-    const [products, setProducts] = useState([]);
+    const [modifierGroups, setModifierGroups] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [search, setSearch] = useState("");
-    const [selectedProduct, setSelectedProduct] = useState(null);
+    const [expandedGroups, setExpandedGroups] = useState({}); // Map of groupId -> items
+    const [loadingItems, setLoadingItems] = useState({}); // Map of groupId -> bool
 
-    // Modifier Group Modal
+    // Idempotency & Loading State
+    const [processingId, setProcessingId] = useState(null); // Stores ID of item/group being processed
+
+    // Group Modal State
     const [isGroupModalOpen, setIsGroupModalOpen] = useState(false);
     const [editingGroup, setEditingGroup] = useState(null);
     const [groupForm, setGroupForm] = useState({
@@ -20,7 +32,7 @@ const AdminModifiers = () => {
         is_required: false,
     });
 
-    // Modifier Item Modal
+    // Item Modal State
     const [isItemModalOpen, setIsItemModalOpen] = useState(false);
     const [editingItem, setEditingItem] = useState(null);
     const [activeGroupId, setActiveGroupId] = useState(null);
@@ -29,35 +41,53 @@ const AdminModifiers = () => {
         price: 0,
         is_available: true,
     });
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     useEffect(() => {
-        fetchProducts();
-    }, [search]);
+        fetchModifierGroups();
+    }, []);
 
-    const fetchProducts = async () => {
+    const fetchModifierGroups = async () => {
         try {
-            const params = { search };
-            const response = await axios.get("/api/admin/menu-items", {
-                params,
-            });
-            setProducts(response.data.menuItems.data);
+            const response = await axios.get("/api/admin/modifier-groups");
+            setModifierGroups(response.data);
             setLoading(false);
         } catch (error) {
-            console.error("Error fetching products:", error);
+            console.error("Error fetching modifier groups:", error);
             setLoading(false);
         }
     };
 
-    const fetchProductDetails = async (id) => {
+    const fetchModifierItems = async (groupId) => {
+        setLoadingItems((prev) => ({ ...prev, [groupId]: true }));
         try {
-            const response = await axios.get(`/api/admin/menu-items/${id}`);
-            setSelectedProduct(response.data);
+            const response = await axios.get(
+                `/api/admin/modifier-groups/${groupId}/modifier-items`
+            );
+            setExpandedGroups((prev) => ({
+                ...prev,
+                [groupId]: response.data,
+            }));
         } catch (error) {
-            console.error("Error fetching product details:", error);
+            console.error("Error fetching modifier items:", error);
+        } finally {
+            setLoadingItems((prev) => ({ ...prev, [groupId]: false }));
         }
     };
 
-    // --- Modifier Group Handlers ---
+    const toggleGroupExpand = (groupId) => {
+        if (expandedGroups[groupId]) {
+            // Collapse: remove from expandedGroups
+            const newExpanded = { ...expandedGroups };
+            delete newExpanded[groupId];
+            setExpandedGroups(newExpanded);
+        } else {
+            // Expand: fetch items
+            fetchModifierItems(groupId);
+        }
+    };
+
+    // --- Group Operations ---
     const handleOpenGroupModal = (group = null) => {
         if (group) {
             setEditingGroup(group);
@@ -81,33 +111,51 @@ const AdminModifiers = () => {
         setIsGroupModalOpen(true);
     };
 
-    const handleGroupSubmit = (e) => {
+    const handleGroupSubmit = async (e) => {
         e.preventDefault();
-        // NOTE: Modifier Group creation needs to be linked to a product?
-        // Based on current DB schema/Controller, ModifierGroup seems independent or linked via pivot.
-        // The controller `store` doesn't take product_id. It seems ModifierGroups are global or managed separately.
-        // Assuming global for now as per controller logic.
-
-        if (editingGroup) {
-            submitToBlade(
-                `/admin/modifier-groups/${editingGroup.id}`,
-                "PUT",
-                groupForm
-            );
-        } else {
-            submitToBlade("/admin/modifier-groups", "POST", groupForm);
+        setIsSubmitting(true);
+        try {
+            if (editingGroup) {
+                await axios.put(
+                    `/api/admin/modifier-groups/${editingGroup.id}`,
+                    groupForm
+                );
+            } else {
+                await axios.post("/api/admin/modifier-groups", groupForm);
+            }
+            fetchModifierGroups();
+            setIsGroupModalOpen(false);
+        } catch (error) {
+            console.error("Error saving modifier group:", error);
+            alert("Failed to save modifier group");
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
-    const handleDeleteGroup = (id) => {
+    const handleDeleteGroup = async (id) => {
+        if (processingId) return;
+
         if (
             confirm("Delete this modifier group? This action cannot be undone.")
         ) {
-            submitToBlade(`/admin/modifier-groups/${id}`, "DELETE");
+            setProcessingId(id);
+            try {
+                await axios.delete(`/api/admin/modifier-groups/${id}`);
+                setModifierGroups(modifierGroups.filter((g) => g.id !== id));
+            } catch (error) {
+                console.error("Error deleting group:", error);
+                alert(
+                    "Failed to delete group: " +
+                        (error.response?.data?.message || error.message)
+                );
+            } finally {
+                setProcessingId(null);
+            }
         }
     };
 
-    // --- Modifier Item Handlers ---
+    // --- Item Operations ---
     const handleOpenItemModal = (groupId, item = null) => {
         setActiveGroupId(groupId);
         if (item) {
@@ -124,28 +172,81 @@ const AdminModifiers = () => {
         setIsItemModalOpen(true);
     };
 
-    const handleItemSubmit = (e) => {
+    const handleItemSubmit = async (e) => {
         e.preventDefault();
-        if (editingItem) {
-            submitToBlade(
-                `/admin/modifier-groups/${activeGroupId}/modifier-items/${editingItem.id}`,
-                "PUT",
-                itemForm
-            );
-        } else {
-            submitToBlade(
-                `/admin/modifier-groups/${activeGroupId}/modifier-items`,
-                "POST",
-                itemForm
-            );
+        setIsSubmitting(true);
+        try {
+            if (editingItem) {
+                await axios.put(
+                    `/api/admin/modifier-groups/${activeGroupId}/modifier-items/${editingItem.id}`,
+                    itemForm
+                );
+            } else {
+                await axios.post(
+                    `/api/admin/modifier-groups/${activeGroupId}/modifier-items`,
+                    itemForm
+                );
+            }
+            fetchModifierItems(activeGroupId);
+            setIsItemModalOpen(false);
+        } catch (error) {
+            console.error("Error saving modifier item:", error);
+            alert("Failed to save modifier item");
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
-    const handleToggleItem = (groupId, itemId) => {
-        submitToBlade(
-            `/admin/modifier-groups/${groupId}/modifier-items/${itemId}/toggle-available`,
-            "POST"
-        );
+    const handleToggleItemAvailable = async (groupId, itemId) => {
+        if (processingId) return;
+        setProcessingId(itemId);
+        try {
+            await axios.post(
+                `/api/admin/modifier-groups/${groupId}/modifier-items/${itemId}/toggle-available`
+            );
+            // Optimistic update
+            const newItems = expandedGroups[groupId].map((item) =>
+                item.id === itemId
+                    ? { ...item, is_available: !item.is_available }
+                    : item
+            );
+            setExpandedGroups({
+                ...expandedGroups,
+                [groupId]: newItems,
+            });
+        } catch (error) {
+            console.error("Error toggling item availability:", error);
+            fetchModifierItems(groupId); // Revert on error
+        } finally {
+            setProcessingId(null);
+        }
+    };
+
+    const handleDeleteItem = async (groupId, itemId) => {
+        if (processingId) return;
+
+        if (confirm("Delete this modifier item?")) {
+            setProcessingId(itemId);
+            try {
+                await axios.delete(
+                    `/api/admin/modifier-groups/${groupId}/modifier-items/${itemId}`
+                );
+                // Optimistic update
+                const newItems = expandedGroups[groupId].filter(
+                    (item) => item.id !== itemId
+                );
+                setExpandedGroups({
+                    ...expandedGroups,
+                    [groupId]: newItems,
+                });
+            } catch (error) {
+                console.error("Error deleting item:", error);
+                alert("Failed to delete item");
+                fetchModifierItems(groupId);
+            } finally {
+                setProcessingId(null);
+            }
+        }
     };
 
     return (
@@ -168,7 +269,225 @@ const AdminModifiers = () => {
                 </button>
             </header>
 
-            {/* Modifier Group Modal */}
+            {loading ? (
+                <div className="text-center py-12 text-stone-500">
+                    Loading...
+                </div>
+            ) : modifierGroups.length === 0 ? (
+                <div className="text-center py-12 bg-white rounded-2xl border border-dashed border-stone-300">
+                    <p className="text-stone-500">No modifier groups found.</p>
+                </div>
+            ) : (
+                <div className="space-y-4">
+                    {modifierGroups.map((group) => (
+                        <div
+                            key={group.id}
+                            className="bg-white rounded-2xl shadow-sm border border-stone-100 overflow-hidden"
+                        >
+                            <div className="p-4 flex items-center justify-between hover:bg-stone-50 transition-colors">
+                                <div
+                                    className="flex items-center space-x-4 cursor-pointer flex-1"
+                                    onClick={() => toggleGroupExpand(group.id)}
+                                >
+                                    <button className="text-stone-400">
+                                        {expandedGroups[group.id] ? (
+                                            <ChevronDown size={20} />
+                                        ) : (
+                                            <ChevronRight size={20} />
+                                        )}
+                                    </button>
+                                    <div>
+                                        <h3 className="font-bold text-stone-800 text-lg">
+                                            {group.name}
+                                        </h3>
+                                        <div className="flex items-center space-x-2 text-sm text-stone-500">
+                                            <span className="capitalize px-2 py-0.5 bg-stone-100 rounded text-stone-600">
+                                                {group.type}
+                                            </span>
+                                            {group.is_required && (
+                                                <span className="text-red-500 font-medium">
+                                                    Required
+                                                </span>
+                                            )}
+                                            <span>
+                                                • Min: {group.min_selection}
+                                            </span>
+                                            <span>
+                                                • Max:{" "}
+                                                {group.max_selection || "Unl."}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                    <button
+                                        onClick={() =>
+                                            handleOpenItemModal(group.id)
+                                        }
+                                        className="p-2 text-amber-600 hover:bg-amber-50 rounded-lg flex items-center space-x-1"
+                                        title="Add Item"
+                                    >
+                                        <Plus size={18} />
+                                        <span className="hidden sm:inline text-sm font-medium">
+                                            Add Item
+                                        </span>
+                                    </button>
+                                    <button
+                                        onClick={() =>
+                                            handleOpenGroupModal(group)
+                                        }
+                                        disabled={processingId === group.id}
+                                        className="p-2 text-stone-400 hover:text-amber-600 hover:bg-stone-100 rounded-lg disabled:opacity-50"
+                                        title="Edit Group"
+                                    >
+                                        <Edit2 size={18} />
+                                    </button>
+                                    <button
+                                        onClick={() =>
+                                            handleDeleteGroup(group.id)
+                                        }
+                                        disabled={processingId === group.id}
+                                        className="p-2 text-stone-400 hover:text-red-600 hover:bg-red-50 rounded-lg disabled:opacity-50"
+                                        title="Delete Group"
+                                    >
+                                        {processingId === group.id ? (
+                                            <Loader2
+                                                size={18}
+                                                className="animate-spin"
+                                            />
+                                        ) : (
+                                            <Trash2 size={18} />
+                                        )}
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* Expanded Items */}
+                            {expandedGroups[group.id] && (
+                                <div className="bg-stone-50 border-t border-stone-100 p-4 pl-12">
+                                    {loadingItems[group.id] ? (
+                                        <div className="text-sm text-stone-500">
+                                            Loading items...
+                                        </div>
+                                    ) : expandedGroups[group.id].length ===
+                                      0 ? (
+                                        <div className="text-sm text-stone-500 italic">
+                                            No items in this group.
+                                        </div>
+                                    ) : (
+                                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                            {expandedGroups[group.id].map(
+                                                (item) => (
+                                                    <div
+                                                        key={item.id}
+                                                        className="bg-white p-3 rounded-xl border border-stone-200 flex justify-between items-center"
+                                                    >
+                                                        <div>
+                                                            <div className="font-medium text-stone-800">
+                                                                {item.name}
+                                                            </div>
+                                                            <div className="text-sm text-amber-600 font-medium flex items-center">
+                                                                <DollarSign
+                                                                    size={12}
+                                                                    className="mr-0.5"
+                                                                />
+                                                                {parseInt(
+                                                                    item.price
+                                                                ).toLocaleString()}
+                                                            </div>
+                                                        </div>
+                                                        <div className="flex items-center space-x-1">
+                                                            <button
+                                                                onClick={() =>
+                                                                    handleToggleItemAvailable(
+                                                                        group.id,
+                                                                        item.id
+                                                                    )
+                                                                }
+                                                                disabled={
+                                                                    processingId ===
+                                                                    item.id
+                                                                }
+                                                                className={`text-xs px-2 py-1 rounded font-medium disabled:opacity-50 disabled:cursor-not-allowed ${
+                                                                    item.is_available
+                                                                        ? "bg-green-100 text-green-700"
+                                                                        : "bg-red-100 text-red-700"
+                                                                }`}
+                                                            >
+                                                                {processingId ===
+                                                                item.id ? (
+                                                                    <Loader2
+                                                                        size={
+                                                                            12
+                                                                        }
+                                                                        className="animate-spin"
+                                                                    />
+                                                                ) : item.is_available ? (
+                                                                    "Avail"
+                                                                ) : (
+                                                                    "Unavail"
+                                                                )}
+                                                            </button>
+                                                            <button
+                                                                onClick={() =>
+                                                                    handleOpenItemModal(
+                                                                        group.id,
+                                                                        item
+                                                                    )
+                                                                }
+                                                                disabled={
+                                                                    processingId ===
+                                                                    item.id
+                                                                }
+                                                                className="p-1.5 text-stone-400 hover:text-amber-600 hover:bg-stone-100 rounded disabled:opacity-50"
+                                                            >
+                                                                <Edit2
+                                                                    size={16}
+                                                                />
+                                                            </button>
+                                                            <button
+                                                                onClick={() =>
+                                                                    handleDeleteItem(
+                                                                        group.id,
+                                                                        item.id
+                                                                    )
+                                                                }
+                                                                disabled={
+                                                                    processingId ===
+                                                                    item.id
+                                                                }
+                                                                className="p-1.5 text-stone-400 hover:text-red-600 hover:bg-red-50 rounded disabled:opacity-50"
+                                                            >
+                                                                {processingId ===
+                                                                item.id ? (
+                                                                    <Loader2
+                                                                        size={
+                                                                            16
+                                                                        }
+                                                                        className="animate-spin"
+                                                                    />
+                                                                ) : (
+                                                                    <Trash2
+                                                                        size={
+                                                                            16
+                                                                        }
+                                                                    />
+                                                                )}
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                )
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+                    ))}
+                </div>
+            )}
+
+            {/* Group Modal */}
             {isGroupModalOpen && (
                 <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
                     <div className="bg-white rounded-2xl w-full max-w-lg">
@@ -296,9 +615,10 @@ const AdminModifiers = () => {
                                 </button>
                                 <button
                                     type="submit"
-                                    className="flex-1 px-4 py-2 bg-amber-700 text-white rounded-xl font-bold"
+                                    disabled={isSubmitting}
+                                    className="flex-1 px-4 py-2 bg-amber-700 text-white rounded-xl font-bold disabled:opacity-50"
                                 >
-                                    Save
+                                    {isSubmitting ? "Saving..." : "Save"}
                                 </button>
                             </div>
                         </form>
@@ -306,7 +626,7 @@ const AdminModifiers = () => {
                 </div>
             )}
 
-            {/* Modifier Item Modal */}
+            {/* Item Modal */}
             {isItemModalOpen && (
                 <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
                     <div className="bg-white rounded-2xl w-full max-w-md">
@@ -391,265 +711,16 @@ const AdminModifiers = () => {
                                 </button>
                                 <button
                                     type="submit"
-                                    className="flex-1 px-4 py-2 bg-amber-700 text-white rounded-xl font-bold"
+                                    disabled={isSubmitting}
+                                    className="flex-1 px-4 py-2 bg-amber-700 text-white rounded-xl font-bold disabled:opacity-50"
                                 >
-                                    Save
+                                    {isSubmitting ? "Saving..." : "Save"}
                                 </button>
                             </div>
                         </form>
                     </div>
                 </div>
             )}
-
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* Product List */}
-                <div className="lg:col-span-1 bg-white rounded-2xl shadow-sm border border-stone-100 overflow-hidden h-80 lg:h-[calc(100vh-200px)] flex flex-col">
-                    <div className="p-4 border-b border-stone-100">
-                        <div className="relative">
-                            <Search
-                                className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400"
-                                size={18}
-                            />
-                            <input
-                                type="text"
-                                placeholder="Search menu items..."
-                                value={search}
-                                onChange={(e) => setSearch(e.target.value)}
-                                className="w-full pl-9 pr-4 py-2 rounded-lg border border-stone-200 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
-                            />
-                        </div>
-                    </div>
-                    <div className="flex-1 overflow-y-auto">
-                        {loading ? (
-                            <div className="p-4 text-center text-stone-500">
-                                Loading...
-                            </div>
-                        ) : (
-                            products.map((product) => (
-                                <div
-                                    key={product.id}
-                                    onClick={() =>
-                                        fetchProductDetails(product.id)
-                                    }
-                                    className={`p-4 border-b border-stone-50 cursor-pointer hover:bg-amber-50 transition-colors ${
-                                        selectedProduct?.id === product.id
-                                            ? "bg-amber-50 border-l-4 border-l-amber-600"
-                                            : ""
-                                    }`}
-                                >
-                                    <div className="font-medium text-stone-800">
-                                        {product.name}
-                                    </div>
-                                    <div className="text-xs text-stone-500">
-                                        {product.category?.name}
-                                    </div>
-                                </div>
-                            ))
-                        )}
-                    </div>
-                </div>
-
-                {/* Modifier Details */}
-                <div className="lg:col-span-2 space-y-6">
-                    {selectedProduct ? (
-                        <>
-                            <div className="bg-white rounded-2xl shadow-sm border border-stone-100 p-6">
-                                <h2 className="text-xl font-bold text-stone-800 mb-4 flex items-center">
-                                    <Layers
-                                        className="mr-2 text-amber-600"
-                                        size={24}
-                                    />
-                                    Modifiers for: {selectedProduct.name}
-                                </h2>
-
-                                {selectedProduct.modifier_groups &&
-                                selectedProduct.modifier_groups.length > 0 ? (
-                                    <div className="space-y-4">
-                                        {selectedProduct.modifier_groups.map(
-                                            (group) => (
-                                                <div
-                                                    key={group.id}
-                                                    className="border border-stone-200 rounded-xl overflow-hidden"
-                                                >
-                                                    <div className="bg-stone-50 p-4 flex justify-between items-center border-b border-stone-200">
-                                                        <div>
-                                                            <h3 className="font-bold text-stone-800">
-                                                                {group.name}
-                                                            </h3>
-                                                            <div className="text-xs text-stone-500">
-                                                                {group.type} •{" "}
-                                                                {group.is_required
-                                                                    ? "Required"
-                                                                    : "Optional"}{" "}
-                                                                • Min:{" "}
-                                                                {
-                                                                    group.min_selection
-                                                                }{" "}
-                                                                • Max:{" "}
-                                                                {
-                                                                    group.max_selection
-                                                                }
-                                                            </div>
-                                                        </div>
-                                                        <div className="flex space-x-2">
-                                                            <button
-                                                                onClick={() =>
-                                                                    handleOpenGroupModal(
-                                                                        group
-                                                                    )
-                                                                }
-                                                                className="p-1.5 bg-white border border-stone-200 rounded hover:text-amber-600"
-                                                            >
-                                                                <Edit2
-                                                                    size={16}
-                                                                />
-                                                            </button>
-                                                            <button
-                                                                onClick={() =>
-                                                                    handleDeleteGroup(
-                                                                        group.id
-                                                                    )
-                                                                }
-                                                                className="p-1.5 bg-white border border-stone-200 rounded hover:text-red-600"
-                                                            >
-                                                                <Trash2
-                                                                    size={16}
-                                                                />
-                                                            </button>
-                                                        </div>
-                                                    </div>
-
-                                                    <div className="p-4">
-                                                        <div className="flex justify-between items-center mb-3">
-                                                            <h4 className="text-sm font-bold text-stone-600">
-                                                                Items
-                                                            </h4>
-                                                            <button
-                                                                onClick={() =>
-                                                                    handleOpenItemModal(
-                                                                        group.id
-                                                                    )
-                                                                }
-                                                                className="text-xs font-bold text-amber-700 hover:underline"
-                                                            >
-                                                                + Add Item
-                                                            </button>
-                                                        </div>
-
-                                                        {group.modifier_items &&
-                                                        group.modifier_items
-                                                            .length > 0 ? (
-                                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                                                {group.modifier_items.map(
-                                                                    (item) => (
-                                                                        <div
-                                                                            key={
-                                                                                item.id
-                                                                            }
-                                                                            className="flex justify-between items-center p-2 bg-stone-50 rounded border border-stone-100"
-                                                                        >
-                                                                            <div>
-                                                                                <div className="font-medium text-sm">
-                                                                                    {
-                                                                                        item.name
-                                                                                    }
-                                                                                </div>
-                                                                                <div className="text-xs text-stone-500">
-                                                                                    +Rp{" "}
-                                                                                    {parseInt(
-                                                                                        item.price
-                                                                                    ).toLocaleString()}
-                                                                                    {!item.is_available && (
-                                                                                        <span className="text-red-500 ml-1">
-                                                                                            (Unavailable)
-                                                                                        </span>
-                                                                                    )}
-                                                                                </div>
-                                                                            </div>
-                                                                            <div className="flex space-x-1">
-                                                                                <button
-                                                                                    onClick={() =>
-                                                                                        handleOpenItemModal(
-                                                                                            group.id,
-                                                                                            item
-                                                                                        )
-                                                                                    }
-                                                                                    className="text-stone-400 hover:text-amber-600"
-                                                                                >
-                                                                                    <Edit2
-                                                                                        size={
-                                                                                            14
-                                                                                        }
-                                                                                    />
-                                                                                </button>
-                                                                                <button
-                                                                                    onClick={() =>
-                                                                                        handleToggleItem(
-                                                                                            group.id,
-                                                                                            item.id
-                                                                                        )
-                                                                                    }
-                                                                                    className={`text-xs px-1 rounded border ${
-                                                                                        item.is_available
-                                                                                            ? "text-green-600 border-green-200"
-                                                                                            : "text-red-600 border-red-200"
-                                                                                    }`}
-                                                                                >
-                                                                                    {item.is_available
-                                                                                        ? "ON"
-                                                                                        : "OFF"}
-                                                                                </button>
-                                                                            </div>
-                                                                        </div>
-                                                                    )
-                                                                )}
-                                                            </div>
-                                                        ) : (
-                                                            <p className="text-sm text-stone-400 italic">
-                                                                No items in this
-                                                                group.
-                                                            </p>
-                                                        )}
-                                                    </div>
-                                                </div>
-                                            )
-                                        )}
-                                    </div>
-                                ) : (
-                                    <div className="text-center py-12 bg-stone-50 rounded-xl border border-dashed border-stone-300">
-                                        <Layers className="mx-auto h-12 w-12 text-stone-300 mb-2" />
-                                        <p className="text-stone-500">
-                                            No modifier groups assigned to this
-                                            product.
-                                        </p>
-                                        <button
-                                            onClick={() =>
-                                                alert(
-                                                    "Feature to assign existing group is coming soon. Please create groups globally first."
-                                                )
-                                            }
-                                            className="mt-4 text-amber-700 font-bold text-sm hover:underline"
-                                        >
-                                            Assign Group
-                                        </button>
-                                    </div>
-                                )}
-                            </div>
-                        </>
-                    ) : (
-                        <div className="bg-white rounded-2xl shadow-sm border border-stone-100 p-12 text-center h-full flex flex-col items-center justify-center">
-                            <Layers className="h-16 w-16 text-stone-200 mb-4" />
-                            <h3 className="text-xl font-bold text-stone-400">
-                                Select a menu item
-                            </h3>
-                            <p className="text-stone-400">
-                                Select a product from the list to view and
-                                manage its modifiers.
-                            </p>
-                        </div>
-                    )}
-                </div>
-            </div>
         </div>
     );
 };

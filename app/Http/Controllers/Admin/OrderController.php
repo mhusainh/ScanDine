@@ -16,17 +16,25 @@ class OrderController extends Controller
     {
         $query = Order::with(['table', 'orderItems.menuItem', 'payment']);
 
-        // Filter by status (default: show active orders for KDS)
+        // Filter by status
         if ($request->has('status') && $request->status != '') {
-            $query->where('status', $request->status);
+            if ($request->status === 'history') {
+                $query->whereIn('status', ['completed', 'cancelled', 'served']);
+                $query->orderBy('created_at', 'desc');
+            } else {
+                $query->where('status', $request->status);
+                $query->orderBy('created_at', 'asc');
+            }
         } else {
             // Default KDS view: pending, cooking, ready
             $query->whereIn('status', ['pending', 'cooking', 'ready', 'confirmed']);
+            $query->orderBy('created_at', 'asc');
         }
 
-        $orders = $query->orderBy('created_at', 'asc')->get();
+        // Return paginated response
+        // Using 20 items per page, append query parameters to pagination links
+        $orders = $query->paginate(20)->withQueryString();
 
-        // Transform for frontend if needed, but standard JSON is usually fine
         return response()->json($orders);
     }
 

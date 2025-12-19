@@ -1,19 +1,33 @@
 import React, { useState, useEffect } from "react";
-import { Plus, Edit2, Trash2, QrCode, Download, X } from "lucide-react";
+import {
+    Plus,
+    Edit2,
+    Trash2,
+    QrCode,
+    Download,
+    X,
+    Loader2,
+} from "lucide-react";
 import { QRCodeCanvas } from "qrcode.react";
 
 const AdminTables = () => {
     // State
     const [tables, setTables] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingTable, setEditingTable] = useState(null);
     const [formData, setFormData] = useState({ table_number: "" });
 
+    const API_ENDPOINT =
+        import.meta.env.VITE_API_TABLES_ENDPOINT || "/api/admin/tables";
+
+    const [processingId, setProcessingId] = useState(null);
+
     // Fetch Tables
     const fetchTables = async () => {
         try {
-            const response = await fetch("/api/admin/tables");
+            const response = await fetch(API_ENDPOINT);
             const data = await response.json();
             setTables(data);
             setIsLoading(false);
@@ -41,10 +55,11 @@ const AdminTables = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        setIsSubmitting(true);
         try {
             const url = editingTable
-                ? `/api/admin/tables/${editingTable.id}`
-                : "/api/admin/tables";
+                ? `${API_ENDPOINT}/${editingTable.id}`
+                : API_ENDPOINT;
 
             const method = editingTable ? "PUT" : "POST";
 
@@ -65,14 +80,19 @@ const AdminTables = () => {
             }
         } catch (error) {
             console.error("Error saving table:", error);
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
     const handleDelete = async (id) => {
+        if (processingId) return;
+
         if (!confirm("Are you sure you want to delete this table?")) return;
 
+        setProcessingId(id);
         try {
-            const response = await fetch(`/api/admin/tables/${id}`, {
+            const response = await fetch(`${API_ENDPOINT}/${id}`, {
                 method: "DELETE",
                 headers: {
                     "X-CSRF-TOKEN": document
@@ -82,12 +102,17 @@ const AdminTables = () => {
             });
 
             if (response.ok) {
-                fetchTables();
+                // Optimistic update
+                setTables(tables.filter((t) => t.id !== id));
             } else {
                 alert("Cannot delete table. It might have active orders.");
+                fetchTables(); // Sync with server
             }
         } catch (error) {
             console.error("Error deleting table:", error);
+            fetchTables();
+        } finally {
+            setProcessingId(null);
         }
     };
 
@@ -163,15 +188,27 @@ const AdminTables = () => {
                                 <button
                                     type="button"
                                     onClick={() => setIsModalOpen(false)}
-                                    className="flex-1 px-4 py-2 border rounded-xl font-bold"
+                                    className="flex-1 px-4 py-2 border rounded-xl font-bold disabled:opacity-50"
+                                    disabled={isSubmitting}
                                 >
                                     Cancel
                                 </button>
                                 <button
                                     type="submit"
-                                    className="flex-1 px-4 py-2 bg-amber-700 text-white rounded-xl font-bold"
+                                    className="flex-1 px-4 py-2 bg-amber-700 text-white rounded-xl font-bold disabled:opacity-70 flex items-center justify-center gap-2"
+                                    disabled={isSubmitting}
                                 >
-                                    Save
+                                    {isSubmitting ? (
+                                        <>
+                                            <Loader2
+                                                size={20}
+                                                className="animate-spin"
+                                            />
+                                            <span>Saving...</span>
+                                        </>
+                                    ) : (
+                                        "Save"
+                                    )}
                                 </button>
                             </div>
                         </form>
@@ -228,15 +265,24 @@ const AdminTables = () => {
                             <div className="flex space-x-2">
                                 <button
                                     onClick={() => handleOpenModal(table)}
-                                    className="p-2 text-stone-400 hover:text-amber-600 hover:bg-white rounded-lg transition-colors"
+                                    disabled={processingId === table.id}
+                                    className="p-2 text-stone-400 hover:text-amber-600 hover:bg-white rounded-lg transition-colors disabled:opacity-50"
                                 >
                                     <Edit2 size={16} />
                                 </button>
                                 <button
                                     onClick={() => handleDelete(table.id)}
-                                    className="p-2 text-stone-400 hover:text-red-600 hover:bg-white rounded-lg transition-colors"
+                                    disabled={processingId === table.id}
+                                    className="p-2 text-stone-400 hover:text-red-600 hover:bg-white rounded-lg transition-colors disabled:opacity-50"
                                 >
-                                    <Trash2 size={16} />
+                                    {processingId === table.id ? (
+                                        <Loader2
+                                            size={16}
+                                            className="animate-spin"
+                                        />
+                                    ) : (
+                                        <Trash2 size={16} />
+                                    )}
                                 </button>
                             </div>
                         </div>

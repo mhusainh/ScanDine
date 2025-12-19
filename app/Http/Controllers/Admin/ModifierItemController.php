@@ -110,4 +110,73 @@ class ModifierItemController extends Controller
 
         return back()->with('success', "Modifier Item berhasil diubah menjadi {$status}.");
     }
+
+    /**
+     * API: Get modifier items by group
+     */
+    public function apiIndex($modifierGroupId)
+    {
+        $modifierItems = ModifierItem::where('modifier_group_id', $modifierGroupId)
+            ->orderBy('sort_order')
+            ->get();
+        return response()->json($modifierItems);
+    }
+
+    /**
+     * API: Store new modifier item
+     */
+    public function apiStore(StoreModifierItemRequest $request, $modifierGroupId)
+    {
+        // Validation handled by FormRequest
+        
+        $modifierItem = ModifierItem::create([
+            'modifier_group_id' => $modifierGroupId,
+            'name' => $request->name,
+            'price' => $request->price,
+            'is_available' => $request->has('is_available') ? true : false,
+            'sort_order' => $request->sort_order ?? 0,
+        ]);
+        return response()->json($modifierItem);
+    }
+
+    /**
+     * API: Update modifier item
+     */
+    public function apiUpdate(UpdateModifierItemRequest $request, $modifierGroupId, $id)
+    {
+        $modifierItem = ModifierItem::where('modifier_group_id', $modifierGroupId)
+            ->findOrFail($id);
+
+        $modifierItem->update([
+            'name' => $request->name,
+            'price' => $request->price,
+            'is_available' => $request->has('is_available') ? true : false,
+            'sort_order' => $request->sort_order ?? 0,
+        ]);
+        return response()->json($modifierItem);
+    }
+
+    /**
+     * API: Delete modifier item
+     */
+    public function apiDestroy($modifierGroupId, $id)
+    {
+        $modifierItem = ModifierItem::where('modifier_group_id', $modifierGroupId)
+            ->findOrFail($id);
+
+        $modifierItem->delete();
+        return response()->json(['message' => 'Modifier Item deleted']);
+    }
+
+    /**
+     * API: Toggle available status
+     */
+    public function apiToggleAvailable($modifierGroupId, $id)
+    {
+        $modifierItem = ModifierItem::where('modifier_group_id', $modifierGroupId)
+            ->findOrFail($id);
+
+        $modifierItem->update(['is_available' => !$modifierItem->is_available]);
+        return response()->json($modifierItem);
+    }
 }

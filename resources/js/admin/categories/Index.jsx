@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { Plus, Edit2, Trash2, Power, X } from "lucide-react";
 import axios from "axios";
-import submitToBlade from "../../global_components/BladeForm/submitToBlade";
 
 const AdminCategories = () => {
     const [categories, setCategories] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     // Modal State
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -22,8 +22,8 @@ const AdminCategories = () => {
 
     const fetchCategories = async () => {
         try {
-            const response = await axios.get("/api/admin/menu-items");
-            setCategories(response.data.categories);
+            const response = await axios.get("/api/admin/categories");
+            setCategories(response.data);
             setLoading(false);
         } catch (error) {
             console.error("Error fetching categories:", error);
@@ -31,14 +31,35 @@ const AdminCategories = () => {
         }
     };
 
-    const handleToggleActive = (id) => {
-        // Use Blade helper to submit POST request
-        submitToBlade(`/admin/categories/${id}/toggle-active`, "POST");
+    const handleToggleActive = async (id) => {
+        if (loading) return; // Basic prevention
+        try {
+            await axios.post(`/api/admin/categories/${id}/toggle-active`);
+            // Optimistic update
+            setCategories(
+                categories.map((cat) =>
+                    cat.id === id ? { ...cat, is_active: !cat.is_active } : cat
+                )
+            );
+        } catch (error) {
+            console.error("Error toggling category status:", error);
+            alert("Failed to toggle status");
+            fetchCategories(); // Revert on error
+        }
     };
 
-    const handleDelete = (id) => {
+    const handleDelete = async (id) => {
         if (confirm("Are you sure you want to delete this category?")) {
-            submitToBlade(`/admin/categories/${id}`, "DELETE");
+            try {
+                await axios.delete(`/api/admin/categories/${id}`);
+                setCategories(categories.filter((cat) => cat.id !== id));
+            } catch (error) {
+                console.error("Error deleting category:", error);
+                alert(
+                    "Failed to delete category: " +
+                        (error.response?.data?.message || error.message)
+                );
+            }
         }
     };
 
@@ -57,17 +78,26 @@ const AdminCategories = () => {
         setIsModalOpen(true);
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
+        setIsSubmitting(true);
 
-        if (editingCategory) {
-            submitToBlade(
-                `/admin/categories/${editingCategory.id}`,
-                "PUT",
-                formData
-            );
-        } else {
-            submitToBlade("/admin/categories", "POST", formData);
+        try {
+            if (editingCategory) {
+                await axios.put(
+                    `/api/admin/categories/${editingCategory.id}`,
+                    formData
+                );
+            } else {
+                await axios.post("/api/admin/categories", formData);
+            }
+            fetchCategories();
+            setIsModalOpen(false);
+        } catch (error) {
+            console.error("Error saving category:", error);
+            alert("Failed to save category");
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
@@ -174,9 +204,10 @@ const AdminCategories = () => {
                                 </button>
                                 <button
                                     type="submit"
-                                    className="flex-1 px-4 py-2 bg-amber-700 text-white rounded-xl font-bold hover:bg-amber-800"
+                                    disabled={isSubmitting}
+                                    className="flex-1 px-4 py-2 bg-amber-700 text-white rounded-xl font-bold hover:bg-amber-800 disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
-                                    Save
+                                    {isSubmitting ? "Saving..." : "Save"}
                                 </button>
                             </div>
                         </form>

@@ -107,4 +107,64 @@ class ModifierGroupController extends Controller
         return redirect()->route('admin.modifier-groups.index')
             ->with('success', 'Modifier Group berhasil dihapus.');
     }
+
+    /**
+     * API: Get all modifier groups
+     */
+    public function apiIndex()
+    {
+        $modifierGroups = ModifierGroup::withCount('modifierItems')
+            ->orderBy('sort_order')
+            ->get();
+        return response()->json($modifierGroups);
+    }
+
+    /**
+     * API: Store new modifier group
+     */
+    public function apiStore(StoreModifierGroupRequest $request)
+    {
+        $modifierGroup = ModifierGroup::create([
+            'name' => $request->name,
+            'type' => $request->type,
+            'min_selection' => $request->min_selection ?? 0,
+            'max_selection' => $request->max_selection,
+            'is_required' => $request->has('is_required') ? true : false,
+            'sort_order' => $request->sort_order ?? 0,
+        ]);
+        return response()->json($modifierGroup);
+    }
+
+    /**
+     * API: Update modifier group
+     */
+    public function apiUpdate(UpdateModifierGroupRequest $request, $id)
+    {
+        $modifierGroup = ModifierGroup::findOrFail($id);
+        $modifierGroup->update([
+            'name' => $request->name,
+            'type' => $request->type,
+            'min_selection' => $request->min_selection ?? 0,
+            'max_selection' => $request->max_selection,
+            'is_required' => $request->has('is_required') ? true : false,
+            'sort_order' => $request->sort_order ?? 0,
+        ]);
+        return response()->json($modifierGroup);
+    }
+
+    /**
+     * API: Delete modifier group
+     */
+    public function apiDestroy($id)
+    {
+        $modifierGroup = ModifierGroup::findOrFail($id);
+        
+        // Check if used by menu items (pivot)
+        if ($modifierGroup->menuItems()->count() > 0) {
+             return response()->json(['message' => 'Cannot delete modifier group used by menu items'], 400);
+        }
+
+        $modifierGroup->delete();
+        return response()->json(['message' => 'Modifier Group deleted']);
+    }
 }

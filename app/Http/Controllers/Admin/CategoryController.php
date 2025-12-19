@@ -100,4 +100,65 @@ class CategoryController extends Controller
 
         return back()->with('success', "Kategori berhasil {$status}.");
     }
+
+    /**
+     * API: Get all categories
+     */
+    public function apiIndex()
+    {
+        $categories = Category::withCount('menuItems')
+            ->orderBy('sort_order')
+            ->get();
+        return response()->json($categories);
+    }
+
+    /**
+     * API: Store new category
+     */
+    public function apiStore(StoreCategoryRequest $request)
+    {
+        $category = Category::create([
+            'name' => $request->name,
+            'sort_order' => $request->sort_order ?? 0,
+            'is_active' => $request->has('is_active') ? true : false,
+        ]);
+        return response()->json($category);
+    }
+
+    /**
+     * API: Update category
+     */
+    public function apiUpdate(UpdateCategoryRequest $request, $id)
+    {
+        $category = Category::findOrFail($id);
+        $category->update([
+            'name' => $request->name,
+            'sort_order' => $request->sort_order ?? 0,
+            'is_active' => $request->has('is_active') ? true : false,
+        ]);
+        return response()->json($category);
+    }
+
+    /**
+     * API: Delete category
+     */
+    public function apiDestroy($id)
+    {
+        $category = Category::findOrFail($id);
+        if ($category->menuItems()->count() > 0) {
+            return response()->json(['message' => 'Cannot delete category with menu items'], 400);
+        }
+        $category->delete();
+        return response()->json(['message' => 'Category deleted']);
+    }
+
+    /**
+     * API: Toggle active status
+     */
+    public function apiToggleActive($id)
+    {
+        $category = Category::findOrFail($id);
+        $category->update(['is_active' => !$category->is_active]);
+        return response()->json($category);
+    }
 }
