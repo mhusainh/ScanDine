@@ -10,7 +10,7 @@ import {
     DollarSign,
     Loader2,
 } from "lucide-react";
-import axios from "axios";
+import axios from "../../lib/axios";
 
 const AdminModifiers = () => {
     const [modifierGroups, setModifierGroups] = useState([]);
@@ -50,10 +50,10 @@ const AdminModifiers = () => {
     const fetchModifierGroups = async () => {
         try {
             const response = await axios.get("/api/admin/modifier-groups");
-            setModifierGroups(response.data);
-            setLoading(false);
+            setModifierGroups(response.data.data);
         } catch (error) {
             console.error("Error fetching modifier groups:", error);
+        } finally {
             setLoading(false);
         }
     };
@@ -66,7 +66,7 @@ const AdminModifiers = () => {
             );
             setExpandedGroups((prev) => ({
                 ...prev,
-                [groupId]: response.data,
+                [groupId]: response.data.data.modifier_items,
             }));
         } catch (error) {
             console.error("Error fetching modifier items:", error);
@@ -253,16 +253,16 @@ const AdminModifiers = () => {
         <div className="space-y-6">
             <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
-                    <h1 className="text-2xl font-bold text-stone-800">
+                    <h1 className="text-2xl font-bold text-coffee-800">
                         Modifier Management
                     </h1>
-                    <p className="text-stone-500">
+                    <p className="text-coffee-500">
                         Manage modifier groups and items
                     </p>
                 </div>
                 <button
                     onClick={() => handleOpenGroupModal()}
-                    className="w-full sm:w-auto bg-amber-700 text-white px-4 py-2 rounded-xl font-bold flex items-center justify-center space-x-2 hover:bg-amber-800 transition-colors"
+                    className="w-full sm:w-auto bg-coffee-600 text-white px-4 py-2 rounded-xl font-bold flex items-center justify-center space-x-2 hover:bg-coffee-700 transition-colors shadow-sm"
                 >
                     <Plus size={20} />
                     <span>Add Modifier Group</span>
@@ -270,26 +270,49 @@ const AdminModifiers = () => {
             </header>
 
             {loading ? (
-                <div className="text-center py-12 text-stone-500">
-                    Loading...
+                <div className="space-y-4">
+                    {[...Array(3)].map((_, i) => (
+                        <div
+                            key={i}
+                            className="bg-white rounded-2xl shadow-sm border border-coffee-100 p-4 animate-pulse"
+                        >
+                            <div className="flex justify-between items-center">
+                                <div className="flex items-center gap-4 flex-1">
+                                    <div className="h-5 w-5 bg-gray-200 rounded"></div>
+                                    <div className="space-y-2 flex-1">
+                                        <div className="h-6 bg-gray-200 rounded w-1/3"></div>
+                                        <div className="flex gap-2">
+                                            <div className="h-5 bg-gray-200 rounded w-16"></div>
+                                            <div className="h-5 bg-gray-200 rounded w-24"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="flex gap-2">
+                                    <div className="h-9 w-24 bg-gray-200 rounded-lg"></div>
+                                    <div className="h-9 w-9 bg-gray-200 rounded-lg"></div>
+                                    <div className="h-9 w-9 bg-gray-200 rounded-lg"></div>
+                                </div>
+                            </div>
+                        </div>
+                    ))}
                 </div>
             ) : modifierGroups.length === 0 ? (
-                <div className="text-center py-12 bg-white rounded-2xl border border-dashed border-stone-300">
-                    <p className="text-stone-500">No modifier groups found.</p>
+                <div className="text-center py-12 bg-white rounded-2xl border border-dashed border-coffee-300">
+                    <p className="text-coffee-500">No modifier groups found.</p>
                 </div>
             ) : (
                 <div className="space-y-4">
                     {modifierGroups.map((group) => (
                         <div
                             key={group.id}
-                            className="bg-white rounded-2xl shadow-sm border border-stone-100 overflow-hidden"
+                            className="bg-white rounded-2xl shadow-sm border border-coffee-100 overflow-hidden"
                         >
-                            <div className="p-4 flex items-center justify-between hover:bg-stone-50 transition-colors">
+                            <div className="p-4 flex items-center justify-between hover:bg-coffee-50/50 transition-colors">
                                 <div
                                     className="flex items-center space-x-4 cursor-pointer flex-1"
                                     onClick={() => toggleGroupExpand(group.id)}
                                 >
-                                    <button className="text-stone-400">
+                                    <button className="text-coffee-400">
                                         {expandedGroups[group.id] ? (
                                             <ChevronDown size={20} />
                                         ) : (
@@ -297,11 +320,11 @@ const AdminModifiers = () => {
                                         )}
                                     </button>
                                     <div>
-                                        <h3 className="font-bold text-stone-800 text-lg">
+                                        <h3 className="font-bold text-coffee-800 text-lg">
                                             {group.name}
                                         </h3>
-                                        <div className="flex items-center space-x-2 text-sm text-stone-500">
-                                            <span className="capitalize px-2 py-0.5 bg-stone-100 rounded text-stone-600">
+                                        <div className="flex items-center space-x-2 text-sm text-coffee-500">
+                                            <span className="capitalize px-2 py-0.5 bg-coffee-100 rounded text-coffee-600">
                                                 {group.type}
                                             </span>
                                             {group.is_required && (
@@ -324,7 +347,7 @@ const AdminModifiers = () => {
                                         onClick={() =>
                                             handleOpenItemModal(group.id)
                                         }
-                                        className="p-2 text-amber-600 hover:bg-amber-50 rounded-lg flex items-center space-x-1"
+                                        className="p-2 text-coffee-600 hover:bg-coffee-50 rounded-lg flex items-center space-x-1"
                                         title="Add Item"
                                     >
                                         <Plus size={18} />
@@ -337,7 +360,7 @@ const AdminModifiers = () => {
                                             handleOpenGroupModal(group)
                                         }
                                         disabled={processingId === group.id}
-                                        className="p-2 text-stone-400 hover:text-amber-600 hover:bg-stone-100 rounded-lg disabled:opacity-50"
+                                        className="p-2 text-coffee-400 hover:text-coffee-600 hover:bg-coffee-100 rounded-lg disabled:opacity-50"
                                         title="Edit Group"
                                     >
                                         <Edit2 size={18} />
@@ -347,7 +370,7 @@ const AdminModifiers = () => {
                                             handleDeleteGroup(group.id)
                                         }
                                         disabled={processingId === group.id}
-                                        className="p-2 text-stone-400 hover:text-red-600 hover:bg-red-50 rounded-lg disabled:opacity-50"
+                                        className="p-2 text-coffee-400 hover:text-red-600 hover:bg-red-50 rounded-lg disabled:opacity-50"
                                         title="Delete Group"
                                     >
                                         {processingId === group.id ? (
@@ -364,14 +387,14 @@ const AdminModifiers = () => {
 
                             {/* Expanded Items */}
                             {expandedGroups[group.id] && (
-                                <div className="bg-stone-50 border-t border-stone-100 p-4 pl-12">
+                                <div className="bg-coffee-50/30 border-t border-coffee-100 p-4 pl-12">
                                     {loadingItems[group.id] ? (
-                                        <div className="text-sm text-stone-500">
+                                        <div className="text-sm text-coffee-500">
                                             Loading items...
                                         </div>
                                     ) : expandedGroups[group.id].length ===
                                       0 ? (
-                                        <div className="text-sm text-stone-500 italic">
+                                        <div className="text-sm text-coffee-500 italic">
                                             No items in this group.
                                         </div>
                                     ) : (
@@ -380,13 +403,13 @@ const AdminModifiers = () => {
                                                 (item) => (
                                                     <div
                                                         key={item.id}
-                                                        className="bg-white p-3 rounded-xl border border-stone-200 flex justify-between items-center"
+                                                        className="bg-white p-3 rounded-xl border border-coffee-200 flex justify-between items-center"
                                                     >
                                                         <div>
-                                                            <div className="font-medium text-stone-800">
+                                                            <div className="font-medium text-coffee-800">
                                                                 {item.name}
                                                             </div>
-                                                            <div className="text-sm text-amber-600 font-medium flex items-center">
+                                                            <div className="text-sm text-coffee-600 font-medium flex items-center">
                                                                 <DollarSign
                                                                     size={12}
                                                                     className="mr-0.5"
@@ -439,7 +462,7 @@ const AdminModifiers = () => {
                                                                     processingId ===
                                                                     item.id
                                                                 }
-                                                                className="p-1.5 text-stone-400 hover:text-amber-600 hover:bg-stone-100 rounded disabled:opacity-50"
+                                                                className="p-1.5 text-coffee-400 hover:text-coffee-600 hover:bg-coffee-100 rounded disabled:opacity-50"
                                                             >
                                                                 <Edit2
                                                                     size={16}
@@ -456,7 +479,7 @@ const AdminModifiers = () => {
                                                                     processingId ===
                                                                     item.id
                                                                 }
-                                                                className="p-1.5 text-stone-400 hover:text-red-600 hover:bg-red-50 rounded disabled:opacity-50"
+                                                                className="p-1.5 text-coffee-400 hover:text-red-600 hover:bg-red-50 rounded disabled:opacity-50"
                                                             >
                                                                 {processingId ===
                                                                 item.id ? (
@@ -491,15 +514,15 @@ const AdminModifiers = () => {
             {isGroupModalOpen && (
                 <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
                     <div className="bg-white rounded-2xl w-full max-w-lg">
-                        <div className="p-6 border-b border-stone-100 flex justify-between items-center">
-                            <h2 className="text-xl font-bold text-stone-800">
+                        <div className="p-6 border-b border-coffee-100 flex justify-between items-center">
+                            <h2 className="text-xl font-bold text-coffee-800">
                                 {editingGroup
                                     ? "Edit Group"
                                     : "Add Modifier Group"}
                             </h2>
                             <button
                                 onClick={() => setIsGroupModalOpen(false)}
-                                className="p-2 hover:bg-stone-100 rounded-full"
+                                className="p-2 hover:bg-coffee-100 rounded-full"
                             >
                                 <X size={20} />
                             </button>
@@ -509,7 +532,7 @@ const AdminModifiers = () => {
                             className="p-6 space-y-4"
                         >
                             <div>
-                                <label className="block text-sm font-medium text-stone-700 mb-1">
+                                <label className="block text-sm font-medium text-coffee-700 mb-1">
                                     Name
                                 </label>
                                 <input
@@ -522,12 +545,12 @@ const AdminModifiers = () => {
                                             name: e.target.value,
                                         })
                                     }
-                                    className="w-full px-4 py-2 rounded-xl border border-stone-200"
+                                    className="w-full px-4 py-2 rounded-xl border border-coffee-200"
                                 />
                             </div>
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-stone-700 mb-1">
+                                    <label className="block text-sm font-medium text-coffee-700 mb-1">
                                         Type
                                     </label>
                                     <select
@@ -538,7 +561,7 @@ const AdminModifiers = () => {
                                                 type: e.target.value,
                                             })
                                         }
-                                        className="w-full px-4 py-2 rounded-xl border border-stone-200 bg-white"
+                                        className="w-full px-4 py-2 rounded-xl border border-coffee-200 bg-white"
                                     >
                                         <option value="single">
                                             Single Choice
@@ -559,11 +582,11 @@ const AdminModifiers = () => {
                                                 is_required: e.target.checked,
                                             })
                                         }
-                                        className="w-4 h-4 text-amber-600 rounded"
+                                        className="w-4 h-4 text-coffee-600 rounded"
                                     />
                                     <label
                                         htmlFor="req"
-                                        className="ml-2 text-sm font-medium text-stone-700"
+                                        className="ml-2 text-sm font-medium text-coffee-700"
                                     >
                                         Required
                                     </label>
@@ -571,7 +594,7 @@ const AdminModifiers = () => {
                             </div>
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-stone-700 mb-1">
+                                    <label className="block text-sm font-medium text-coffee-700 mb-1">
                                         Min Selection
                                     </label>
                                     <input
@@ -584,11 +607,11 @@ const AdminModifiers = () => {
                                                 min_selection: e.target.value,
                                             })
                                         }
-                                        className="w-full px-4 py-2 rounded-xl border border-stone-200"
+                                        className="w-full px-4 py-2 rounded-xl border border-coffee-200"
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-stone-700 mb-1">
+                                    <label className="block text-sm font-medium text-coffee-700 mb-1">
                                         Max Selection
                                     </label>
                                     <input
@@ -601,7 +624,7 @@ const AdminModifiers = () => {
                                                 max_selection: e.target.value,
                                             })
                                         }
-                                        className="w-full px-4 py-2 rounded-xl border border-stone-200"
+                                        className="w-full px-4 py-2 rounded-xl border border-coffee-200"
                                     />
                                 </div>
                             </div>
@@ -616,7 +639,7 @@ const AdminModifiers = () => {
                                 <button
                                     type="submit"
                                     disabled={isSubmitting}
-                                    className="flex-1 px-4 py-2 bg-amber-700 text-white rounded-xl font-bold disabled:opacity-50"
+                                    className="flex-1 px-4 py-2 bg-coffee-600 text-white rounded-xl font-bold disabled:opacity-50"
                                 >
                                     {isSubmitting ? "Saving..." : "Save"}
                                 </button>
@@ -630,15 +653,15 @@ const AdminModifiers = () => {
             {isItemModalOpen && (
                 <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
                     <div className="bg-white rounded-2xl w-full max-w-md">
-                        <div className="p-6 border-b border-stone-100 flex justify-between items-center">
-                            <h2 className="text-xl font-bold text-stone-800">
+                        <div className="p-6 border-b border-coffee-100 flex justify-between items-center">
+                            <h2 className="text-xl font-bold text-coffee-800">
                                 {editingItem
                                     ? "Edit Item"
                                     : "Add Modifier Item"}
                             </h2>
                             <button
                                 onClick={() => setIsItemModalOpen(false)}
-                                className="p-2 hover:bg-stone-100 rounded-full"
+                                className="p-2 hover:bg-coffee-100 rounded-full"
                             >
                                 <X size={20} />
                             </button>
@@ -648,7 +671,7 @@ const AdminModifiers = () => {
                             className="p-6 space-y-4"
                         >
                             <div>
-                                <label className="block text-sm font-medium text-stone-700 mb-1">
+                                <label className="block text-sm font-medium text-coffee-700 mb-1">
                                     Name
                                 </label>
                                 <input
@@ -661,11 +684,11 @@ const AdminModifiers = () => {
                                             name: e.target.value,
                                         })
                                     }
-                                    className="w-full px-4 py-2 rounded-xl border border-stone-200"
+                                    className="w-full px-4 py-2 rounded-xl border border-coffee-200"
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-stone-700 mb-1">
+                                <label className="block text-sm font-medium text-coffee-700 mb-1">
                                     Price (+Rp)
                                 </label>
                                 <input
@@ -678,7 +701,7 @@ const AdminModifiers = () => {
                                             price: e.target.value,
                                         })
                                     }
-                                    className="w-full px-4 py-2 rounded-xl border border-stone-200"
+                                    className="w-full px-4 py-2 rounded-xl border border-coffee-200"
                                 />
                             </div>
                             <div className="flex items-center">
@@ -692,11 +715,11 @@ const AdminModifiers = () => {
                                             is_available: e.target.checked,
                                         })
                                     }
-                                    className="w-4 h-4 text-amber-600 rounded"
+                                    className="w-4 h-4 text-coffee-600 rounded"
                                 />
                                 <label
                                     htmlFor="avail"
-                                    className="ml-2 text-sm font-medium text-stone-700"
+                                    className="ml-2 text-sm font-medium text-coffee-700"
                                 >
                                     Available
                                 </label>
@@ -712,7 +735,7 @@ const AdminModifiers = () => {
                                 <button
                                     type="submit"
                                     disabled={isSubmitting}
-                                    className="flex-1 px-4 py-2 bg-amber-700 text-white rounded-xl font-bold disabled:opacity-50"
+                                    className="flex-1 px-4 py-2 bg-coffee-600 text-white rounded-xl font-bold disabled:opacity-50"
                                 >
                                     {isSubmitting ? "Saving..." : "Save"}
                                 </button>

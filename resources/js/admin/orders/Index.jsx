@@ -7,7 +7,7 @@ import {
     History,
     List,
 } from "lucide-react";
-import axios from "axios";
+import axios from "../../lib/axios";
 
 const AdminOrders = () => {
     const [orders, setOrders] = useState([]);
@@ -38,16 +38,17 @@ const AdminOrders = () => {
         try {
             const params = {
                 page: page,
-                status: viewMode === "active" ? "" : "history",
+                status: viewMode === "active" ? "active" : "history",
             };
             const response = await axios.get("/api/admin/orders", { params });
-            setOrders(response.data.data);
+            const result = response.data.data;
+            setOrders(result.data);
             setPagination({
-                current_page: response.data.current_page,
-                last_page: response.data.last_page,
-                prev_page_url: response.data.prev_page_url,
-                next_page_url: response.data.next_page_url,
-                total: response.data.total,
+                current_page: result.current_page,
+                last_page: result.last_page,
+                prev_page_url: result.prev_page_url,
+                next_page_url: result.next_page_url,
+                total: result.total,
             });
             setLoading(false);
         } catch (error) {
@@ -61,13 +62,15 @@ const AdminOrders = () => {
         setProcessingId(orderId);
 
         try {
-            await axios.post(`/api/admin/orders/${orderId}/status`, {
+            await axios.patch(`/api/admin/orders/${orderId}/status`, {
                 status: newStatus,
             });
             // Optimistic update
             if (
                 viewMode === "active" &&
-                (newStatus === "completed" || newStatus === "cancelled")
+                (newStatus === "served" ||
+                    newStatus === "completed" ||
+                    newStatus === "cancelled")
             ) {
                 // Remove from active view
                 setOrders(orders.filter((o) => o.id !== orderId));
@@ -89,18 +92,19 @@ const AdminOrders = () => {
     const getStatusColor = (status) => {
         switch (status) {
             case "pending":
+                return "bg-gray-100 text-gray-600 border-gray-200";
             case "confirmed":
-                return "bg-amber-100 text-amber-800 border-amber-200";
-            case "cooking":
+                return "bg-coffee-100 text-coffee-800 border-coffee-200";
+            case "preparing":
                 return "bg-blue-100 text-blue-800 border-blue-200";
-            case "ready":
+            case "served":
                 return "bg-green-100 text-green-800 border-green-200";
             case "completed":
-                return "bg-stone-100 text-stone-800 border-stone-200";
+                return "bg-gray-100 text-gray-600 border-gray-200";
             case "cancelled":
                 return "bg-red-100 text-red-800 border-red-200";
             default:
-                return "bg-stone-100 text-stone-800 border-stone-200";
+                return "bg-coffee-100 text-coffee-800 border-coffee-200";
         }
     };
 
@@ -108,12 +112,12 @@ const AdminOrders = () => {
         <div className="space-y-6">
             <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
-                    <h1 className="text-2xl font-bold text-stone-800">
+                    <h1 className="text-2xl font-bold text-coffee-800">
                         {viewMode === "active"
                             ? "Kitchen Display System (KDS)"
                             : "Order History"}
                     </h1>
-                    <p className="text-stone-500">
+                    <p className="text-coffee-500">
                         {viewMode === "active"
                             ? "Manage active orders from the kitchen"
                             : "View past orders"}
@@ -124,8 +128,8 @@ const AdminOrders = () => {
                         onClick={() => setViewMode("active")}
                         className={`px-4 py-2 rounded-lg font-medium flex items-center gap-2 transition-colors ${
                             viewMode === "active"
-                                ? "bg-amber-600 text-white"
-                                : "bg-white text-stone-600 border border-stone-200 hover:bg-stone-50"
+                                ? "bg-coffee-600 text-white"
+                                : "bg-white text-coffee-600 border border-coffee-200 hover:bg-coffee-50"
                         }`}
                     >
                         <ChefHat size={18} /> Active Orders
@@ -134,15 +138,15 @@ const AdminOrders = () => {
                         onClick={() => setViewMode("history")}
                         className={`px-4 py-2 rounded-lg font-medium flex items-center gap-2 transition-colors ${
                             viewMode === "history"
-                                ? "bg-amber-600 text-white"
-                                : "bg-white text-stone-600 border border-stone-200 hover:bg-stone-50"
+                                ? "bg-coffee-600 text-white"
+                                : "bg-white text-coffee-600 border border-coffee-200 hover:bg-coffee-50"
                         }`}
                     >
                         <History size={18} /> History
                     </button>
                     <button
                         onClick={() => fetchOrders(pagination.current_page)}
-                        className="p-2 text-stone-500 hover:text-amber-600 rounded-lg border border-stone-200 hover:bg-stone-50"
+                        className="p-2 text-coffee-500 hover:text-coffee-600 rounded-lg border border-coffee-200 hover:bg-coffee-50"
                         title="Refresh"
                     >
                         <RotateCcw size={20} />
@@ -151,14 +155,44 @@ const AdminOrders = () => {
             </header>
 
             {loading ? (
-                <div className="p-12 text-center">
-                    <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-amber-500 border-t-transparent"></div>
-                    <p className="mt-2 text-stone-500">Loading orders...</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    {[...Array(8)].map((_, i) => (
+                        <div
+                            key={i}
+                            className="bg-white rounded-2xl shadow-sm border-2 border-gray-100 overflow-hidden flex flex-col animate-pulse"
+                        >
+                            <div className="p-4 border-b border-gray-100 flex justify-between items-center">
+                                <div className="flex gap-2 items-center">
+                                    <div className="h-6 bg-gray-200 rounded w-20"></div>
+                                    <div className="h-5 bg-gray-200 rounded-full w-16"></div>
+                                </div>
+                                <div className="h-5 bg-gray-200 rounded w-24"></div>
+                            </div>
+                            <div className="p-4 flex-1 space-y-4 min-h-[160px]">
+                                {[...Array(3)].map((_, j) => (
+                                    <div key={j} className="flex gap-2">
+                                        <div className="h-5 bg-gray-200 rounded w-6"></div>
+                                        <div className="flex-1 space-y-2">
+                                            <div className="h-5 bg-gray-200 rounded w-3/4"></div>
+                                            {j === 0 && (
+                                                <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                                            )}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                            <div className="p-4 border-t border-gray-100 bg-gray-50">
+                                <div className="grid grid-cols-2 gap-2">
+                                    <div className="h-10 bg-gray-200 rounded col-span-2"></div>
+                                </div>
+                            </div>
+                        </div>
+                    ))}
                 </div>
             ) : orders.length === 0 ? (
-                <div className="text-center py-12 bg-white rounded-2xl border border-dashed border-stone-300">
-                    <div className="text-stone-400 mb-2">No orders found</div>
-                    <p className="text-sm text-stone-500">
+                <div className="text-center py-12 bg-white rounded-2xl border border-dashed border-coffee-300">
+                    <div className="text-coffee-400 mb-2">No orders found</div>
+                    <p className="text-sm text-coffee-500">
                         {viewMode === "active"
                             ? "New orders will appear here automatically"
                             : "No history available"}
@@ -204,16 +238,16 @@ const AdminOrders = () => {
                                         className="flex justify-between items-start"
                                     >
                                         <div className="flex space-x-2">
-                                            <span className="font-bold text-stone-800 w-6">
+                                            <span className="font-bold text-coffee-800 w-6">
                                                 {item.quantity}x
                                             </span>
                                             <div>
-                                                <div className="text-stone-800 font-medium">
+                                                <div className="text-coffee-800 font-medium">
                                                     {item.menu_item?.name ||
                                                         "Unknown Item"}
                                                 </div>
                                                 {item.note && (
-                                                    <div className="text-xs text-amber-600 italic mt-0.5">
+                                                    <div className="text-xs text-coffee-600 italic mt-0.5">
                                                         Note: {item.note}
                                                     </div>
                                                 )}
@@ -223,12 +257,11 @@ const AdminOrders = () => {
                                 ))}
                             </div>
 
-                            <div className="p-4 bg-stone-50 border-t border-stone-100 grid grid-cols-2 gap-2">
-                                {(order.status === "pending" ||
-                                    order.status === "confirmed") && (
+                            <div className="p-4 bg-coffee-50 border-t border-coffee-100 grid grid-cols-2 gap-2">
+                                {order.status === "confirmed" && (
                                     <button
                                         onClick={() =>
-                                            updateStatus(order.id, "cooking")
+                                            updateStatus(order.id, "preparing")
                                         }
                                         disabled={processingId === order.id}
                                         className="col-span-2 bg-blue-600 text-white py-2 rounded-lg font-medium hover:bg-blue-700 flex items-center justify-center space-x-2 transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
@@ -245,10 +278,10 @@ const AdminOrders = () => {
                                         </span>
                                     </button>
                                 )}
-                                {order.status === "cooking" && (
+                                {order.status === "preparing" && (
                                     <button
                                         onClick={() =>
-                                            updateStatus(order.id, "ready")
+                                            updateStatus(order.id, "served")
                                         }
                                         disabled={processingId === order.id}
                                         className="col-span-2 bg-green-600 text-white py-2 rounded-lg font-medium hover:bg-green-700 flex items-center justify-center space-x-2 transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
@@ -261,7 +294,7 @@ const AdminOrders = () => {
                                         <span>
                                             {processingId === order.id
                                                 ? "Processing..."
-                                                : "Mark Ready"}
+                                                : "Serve Order"}
                                         </span>
                                     </button>
                                 )}
@@ -271,7 +304,7 @@ const AdminOrders = () => {
                                             updateStatus(order.id, "completed")
                                         }
                                         disabled={processingId === order.id}
-                                        className="col-span-2 bg-stone-800 text-white py-2 rounded-lg font-medium hover:bg-stone-900 flex items-center justify-center space-x-2 transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
+                                        className="col-span-2 bg-coffee-800 text-white py-2 rounded-lg font-medium hover:bg-coffee-900 flex items-center justify-center space-x-2 transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
                                     >
                                         {processingId === order.id ? (
                                             <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
@@ -291,10 +324,10 @@ const AdminOrders = () => {
                 </div>
             ) : (
                 // History List View
-                <div className="bg-white rounded-2xl shadow-sm border border-stone-100 overflow-hidden">
+                <div className="bg-white rounded-2xl shadow-sm border border-coffee-100 overflow-hidden">
                     <div className="overflow-x-auto">
                         <table className="w-full">
-                            <thead className="bg-stone-50 text-stone-500 text-sm">
+                            <thead className="bg-coffee-50/50 text-coffee-500 text-sm">
                                 <tr>
                                     <th className="px-6 py-4 text-left font-medium">
                                         Order ID
@@ -316,16 +349,16 @@ const AdminOrders = () => {
                                     </th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-stone-100">
+                            <tbody className="divide-y divide-coffee-100">
                                 {orders.map((order) => (
                                     <tr
                                         key={order.id}
-                                        className="hover:bg-stone-50"
+                                        className="hover:bg-coffee-50/50"
                                     >
                                         <td className="px-6 py-4 font-mono text-sm">
                                             #{order.id}
                                         </td>
-                                        <td className="px-6 py-4 text-stone-600">
+                                        <td className="px-6 py-4 text-coffee-600">
                                             {new Date(
                                                 order.created_at
                                             ).toLocaleString("id-ID")}
@@ -334,7 +367,7 @@ const AdminOrders = () => {
                                             Table{" "}
                                             {order.table?.table_number || "?"}
                                         </td>
-                                        <td className="px-6 py-4 text-sm text-stone-600 max-w-xs truncate">
+                                        <td className="px-6 py-4 text-sm text-coffee-600 max-w-xs truncate">
                                             {order.order_items
                                                 ?.map(
                                                     (i) =>
@@ -369,21 +402,21 @@ const AdminOrders = () => {
 
             {/* Pagination */}
             {pagination.total > 0 && (
-                <div className="flex justify-between items-center pt-4 border-t border-stone-200">
+                <div className="flex justify-between items-center pt-4 border-t border-coffee-200">
                     <button
                         disabled={!pagination.prev_page_url}
                         onClick={() => fetchOrders(pagination.current_page - 1)}
-                        className="px-4 py-2 border border-stone-300 rounded-lg disabled:opacity-50 hover:bg-stone-50"
+                        className="px-4 py-2 border border-coffee-300 rounded-lg disabled:opacity-50 hover:bg-coffee-50"
                     >
                         Previous
                     </button>
-                    <span className="text-stone-500">
+                    <span className="text-coffee-500">
                         Page {pagination.current_page} of {pagination.last_page}
                     </span>
                     <button
                         disabled={!pagination.next_page_url}
                         onClick={() => fetchOrders(pagination.current_page + 1)}
-                        className="px-4 py-2 border border-stone-300 rounded-lg disabled:opacity-50 hover:bg-stone-50"
+                        className="px-4 py-2 border border-coffee-300 rounded-lg disabled:opacity-50 hover:bg-coffee-50"
                     >
                         Next
                     </button>

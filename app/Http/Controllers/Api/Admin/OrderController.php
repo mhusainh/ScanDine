@@ -18,10 +18,18 @@ class OrderController extends Controller
         // Filter by status
         if ($request->has('status') && $request->status != '') {
             if ($request->status === 'history') {
-                $query->whereIn('status', ['served', 'completed', 'cancelled']);
+                $query->whereIn('status', ['served', 'completed', 'cancelled', 'pending']);
+                $query->latest();
+            } elseif ($request->status === 'active') {
+                $query->whereIn('status', ['confirmed', 'preparing']);
+                $query->oldest(); // Sort active orders by oldest first (FIFO)
             } else {
                 $query->where('status', $request->status);
+                $query->latest();
             }
+        } else {
+            // Default view if no status is provided
+            $query->latest();
         }
 
         // Filter by payment status

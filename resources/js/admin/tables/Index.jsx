@@ -9,6 +9,7 @@ import {
     Loader2,
 } from "lucide-react";
 import { QRCodeCanvas } from "qrcode.react";
+import axios from "../../lib/axios";
 
 const AdminTables = () => {
     // State
@@ -26,10 +27,10 @@ const AdminTables = () => {
 
     // Fetch Tables
     const fetchTables = async () => {
+        // setIsLoading(true); // Don't block UI on re-fetch
         try {
-            const response = await fetch(API_ENDPOINT);
-            const data = await response.json();
-            setTables(data);
+            const response = await axios.get(API_ENDPOINT);
+            setTables(response.data.data);
             setIsLoading(false);
         } catch (error) {
             console.error("Error fetching tables:", error);
@@ -61,23 +62,14 @@ const AdminTables = () => {
                 ? `${API_ENDPOINT}/${editingTable.id}`
                 : API_ENDPOINT;
 
-            const method = editingTable ? "PUT" : "POST";
-
-            const response = await fetch(url, {
-                method: method,
-                headers: {
-                    "Content-Type": "application/json",
-                    "X-CSRF-TOKEN": document
-                        .querySelector('meta[name="csrf-token"]')
-                        .getAttribute("content"),
-                },
-                body: JSON.stringify(formData),
-            });
-
-            if (response.ok) {
-                fetchTables();
-                setIsModalOpen(false);
+            if (editingTable) {
+                await axios.put(url, formData);
+            } else {
+                await axios.post(url, formData);
             }
+
+            fetchTables();
+            setIsModalOpen(false);
         } catch (error) {
             console.error("Error saving table:", error);
         } finally {
@@ -92,25 +84,11 @@ const AdminTables = () => {
 
         setProcessingId(id);
         try {
-            const response = await fetch(`${API_ENDPOINT}/${id}`, {
-                method: "DELETE",
-                headers: {
-                    "X-CSRF-TOKEN": document
-                        .querySelector('meta[name="csrf-token"]')
-                        .getAttribute("content"),
-                },
-            });
-
-            if (response.ok) {
-                // Optimistic update
-                setTables(tables.filter((t) => t.id !== id));
-            } else {
-                alert("Cannot delete table. It might have active orders.");
-                fetchTables(); // Sync with server
-            }
+            await axios.delete(`${API_ENDPOINT}/${id}`);
+            setTables(tables.filter((t) => t.id !== id));
         } catch (error) {
             console.error("Error deleting table:", error);
-            fetchTables();
+            alert("Failed to delete table");
         } finally {
             setProcessingId(null);
         }
@@ -136,14 +114,16 @@ const AdminTables = () => {
         <div className="space-y-6">
             <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
-                    <h1 className="text-2xl font-bold text-stone-800">
+                    <h1 className="text-2xl font-bold text-coffee-800">
                         Table Management
                     </h1>
-                    <p className="text-stone-500">Manage tables and QR codes</p>
+                    <p className="text-coffee-500">
+                        Manage tables and QR codes
+                    </p>
                 </div>
                 <button
                     onClick={() => handleOpenModal()}
-                    className="w-full sm:w-auto bg-amber-700 text-white px-4 py-2 rounded-xl font-bold flex items-center justify-center space-x-2 hover:bg-amber-800 transition-colors"
+                    className="w-full sm:w-auto bg-coffee-600 text-white px-4 py-2 rounded-xl font-bold flex items-center justify-center space-x-2 hover:bg-coffee-700 transition-colors shadow-sm hover:shadow-md"
                 >
                     <Plus size={20} />
                     <span>Add Table</span>
@@ -152,22 +132,22 @@ const AdminTables = () => {
 
             {/* Modal */}
             {isModalOpen && (
-                <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-                    <div className="bg-white rounded-2xl w-full max-w-md">
-                        <div className="p-6 border-b border-stone-100 flex justify-between items-center">
-                            <h2 className="text-xl font-bold text-stone-800">
+                <div className="fixed inset-0 bg-coffee-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl border border-coffee-100">
+                        <div className="p-6 border-b border-coffee-100 flex justify-between items-center">
+                            <h2 className="text-xl font-bold text-coffee-800">
                                 {editingTable ? "Edit Table" : "Add New Table"}
                             </h2>
                             <button
                                 onClick={() => setIsModalOpen(false)}
-                                className="p-2 hover:bg-stone-100 rounded-full"
+                                className="p-2 hover:bg-coffee-50 text-coffee-400 hover:text-coffee-600 rounded-full transition-colors"
                             >
                                 <X size={20} />
                             </button>
                         </div>
                         <form onSubmit={handleSubmit} className="p-6 space-y-4">
                             <div>
-                                <label className="block text-sm font-medium text-stone-700 mb-1">
+                                <label className="block text-sm font-medium text-coffee-700 mb-1">
                                     Table Number
                                 </label>
                                 <input
@@ -180,7 +160,7 @@ const AdminTables = () => {
                                             table_number: e.target.value,
                                         })
                                     }
-                                    className="w-full px-4 py-2 rounded-xl border border-stone-200 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                                    className="w-full px-4 py-2 rounded-xl border border-coffee-200 focus:outline-none focus:ring-2 focus:ring-coffee-500"
                                     placeholder="e.g. 1, 5, A1"
                                 />
                             </div>
@@ -188,14 +168,14 @@ const AdminTables = () => {
                                 <button
                                     type="button"
                                     onClick={() => setIsModalOpen(false)}
-                                    className="flex-1 px-4 py-2 border rounded-xl font-bold disabled:opacity-50"
+                                    className="flex-1 px-4 py-2 border border-coffee-200 rounded-xl font-bold text-coffee-600 hover:bg-coffee-50 disabled:opacity-50"
                                     disabled={isSubmitting}
                                 >
                                     Cancel
                                 </button>
                                 <button
                                     type="submit"
-                                    className="flex-1 px-4 py-2 bg-amber-700 text-white rounded-xl font-bold disabled:opacity-70 flex items-center justify-center gap-2"
+                                    className="flex-1 px-4 py-2 bg-coffee-600 text-white rounded-xl font-bold disabled:opacity-70 flex items-center justify-center gap-2 hover:bg-coffee-700 transition-colors shadow-sm"
                                     disabled={isSubmitting}
                                 >
                                     {isSubmitting ? (
@@ -218,81 +198,105 @@ const AdminTables = () => {
 
             {/* Table Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {tables.map((table) => (
-                    <div
-                        key={table.id}
-                        className="bg-white rounded-2xl shadow-sm border border-stone-100 overflow-hidden flex flex-col"
-                    >
-                        <div className="p-6 flex-1 flex flex-col items-center justify-center text-center space-y-4">
-                            <div className="bg-white p-2 rounded-xl border border-stone-100 shadow-sm">
-                                <QRCodeCanvas
-                                    id={`qr-code-${table.id}`}
-                                    value={`${window.location.origin}/menu/${table.uuid}`}
-                                    size={150}
-                                    level={"H"}
-                                    includeMargin={true}
-                                />
-                            </div>
-                            <div>
-                                <h3 className="text-xl font-bold text-stone-800">
-                                    Table {table.table_number}
-                                </h3>
-                                <p
-                                    className={`text-sm font-medium ${
-                                        table.status === "available"
-                                            ? "text-green-600"
-                                            : table.status === "occupied"
-                                            ? "text-red-600"
-                                            : "text-stone-500"
-                                    }`}
-                                >
-                                    {table.status.charAt(0).toUpperCase() +
-                                        table.status.slice(1)}
-                                </p>
-                            </div>
-                        </div>
+                {isLoading
+                    ? [...Array(8)].map((_, i) => (
+                          <div
+                              key={i}
+                              className="bg-white rounded-2xl shadow-sm border border-coffee-100 p-0 overflow-hidden flex flex-col animate-pulse"
+                          >
+                              <div className="p-6 flex-1 flex flex-col items-center justify-center space-y-4">
+                                  <div className="w-40 h-40 bg-gray-200 rounded-xl"></div>
+                                  <div className="space-y-2 w-full flex flex-col items-center">
+                                      <div className="h-7 bg-gray-200 rounded w-32"></div>
+                                      <div className="h-4 bg-gray-200 rounded w-20"></div>
+                                  </div>
+                              </div>
+                              <div className="bg-gray-50 p-4 border-t border-gray-100 flex justify-between items-center">
+                                  <div className="h-5 w-16 bg-gray-200 rounded"></div>
+                                  <div className="flex gap-2">
+                                      <div className="h-8 w-8 bg-gray-200 rounded-lg"></div>
+                                      <div className="h-8 w-8 bg-gray-200 rounded-lg"></div>
+                                  </div>
+                              </div>
+                          </div>
+                      ))
+                    : tables.map((table) => (
+                          <div
+                              key={table.id}
+                              className="bg-white rounded-2xl shadow-sm border border-coffee-100 overflow-hidden flex flex-col hover:shadow-md transition-all duration-200 group"
+                          >
+                              <div className="p-6 flex-1 flex flex-col items-center justify-center text-center space-y-4">
+                                  <div className="bg-white p-2 rounded-xl border border-coffee-100 shadow-sm group-hover:scale-105 transition-transform duration-200">
+                                      <QRCodeCanvas
+                                          id={`qr-code-${table.id}`}
+                                          value={`${window.location.origin}/menu/${table.uuid}`}
+                                          size={150}
+                                          level={"H"}
+                                          includeMargin={true}
+                                      />
+                                  </div>
+                                  <div>
+                                      <h3 className="text-xl font-bold text-coffee-800">
+                                          Table {table.table_number}
+                                      </h3>
+                                      <p
+                                          className={`text-sm font-medium ${
+                                              table.status === "available"
+                                                  ? "text-green-600"
+                                                  : table.status === "occupied"
+                                                  ? "text-red-600"
+                                                  : "text-coffee-500"
+                                          }`}
+                                      >
+                                          {table.status
+                                              .charAt(0)
+                                              .toUpperCase() +
+                                              table.status.slice(1)}
+                                      </p>
+                                  </div>
+                              </div>
 
-                        <div className="bg-stone-50 p-4 border-t border-stone-100 flex justify-between items-center">
-                            <button
-                                onClick={() => downloadQR(table)}
-                                className="text-stone-600 hover:text-amber-700 font-medium text-sm flex items-center space-x-1"
-                                title="Download QR Code"
-                            >
-                                <Download size={16} />
-                                <span>QR</span>
-                            </button>
+                              <div className="bg-coffee-50/50 p-4 border-t border-coffee-100 flex justify-between items-center">
+                                  <button
+                                      onClick={() => downloadQR(table)}
+                                      className="text-coffee-600 hover:text-coffee-800 font-medium text-sm flex items-center space-x-1 transition-colors"
+                                      title="Download QR Code"
+                                  >
+                                      <Download size={16} />
+                                      <span>QR</span>
+                                  </button>
 
-                            <div className="flex space-x-2">
-                                <button
-                                    onClick={() => handleOpenModal(table)}
-                                    disabled={processingId === table.id}
-                                    className="p-2 text-stone-400 hover:text-amber-600 hover:bg-white rounded-lg transition-colors disabled:opacity-50"
-                                >
-                                    <Edit2 size={16} />
-                                </button>
-                                <button
-                                    onClick={() => handleDelete(table.id)}
-                                    disabled={processingId === table.id}
-                                    className="p-2 text-stone-400 hover:text-red-600 hover:bg-white rounded-lg transition-colors disabled:opacity-50"
-                                >
-                                    {processingId === table.id ? (
-                                        <Loader2
-                                            size={16}
-                                            className="animate-spin"
-                                        />
-                                    ) : (
-                                        <Trash2 size={16} />
-                                    )}
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                ))}
+                                  <div className="flex space-x-2">
+                                      <button
+                                          onClick={() => handleOpenModal(table)}
+                                          disabled={processingId === table.id}
+                                          className="p-2 text-coffee-400 hover:text-coffee-600 hover:bg-white rounded-lg transition-colors disabled:opacity-50"
+                                      >
+                                          <Edit2 size={16} />
+                                      </button>
+                                      <button
+                                          onClick={() => handleDelete(table.id)}
+                                          disabled={processingId === table.id}
+                                          className="p-2 text-coffee-400 hover:text-red-600 hover:bg-white rounded-lg transition-colors disabled:opacity-50"
+                                      >
+                                          {processingId === table.id ? (
+                                              <Loader2
+                                                  size={16}
+                                                  className="animate-spin"
+                                              />
+                                          ) : (
+                                              <Trash2 size={16} />
+                                          )}
+                                      </button>
+                                  </div>
+                              </div>
+                          </div>
+                      ))}
 
                 {/* Empty State */}
                 {tables.length === 0 && !isLoading && (
-                    <div className="col-span-full py-12 text-center text-stone-500">
-                        <div className="w-16 h-16 bg-stone-100 rounded-full flex items-center justify-center mx-auto mb-4 text-stone-400">
+                    <div className="col-span-full py-12 text-center text-coffee-500">
+                        <div className="w-16 h-16 bg-coffee-100 rounded-full flex items-center justify-center mx-auto mb-4 text-coffee-400">
                             <QrCode size={32} />
                         </div>
                         <p>

@@ -9,7 +9,7 @@ import {
     Loader2,
     Image as ImageIcon,
 } from "lucide-react";
-import axios from "axios";
+import axios from "../../lib/axios";
 
 const AdminMenu = () => {
     const [products, setProducts] = useState([]);
@@ -42,8 +42,18 @@ const AdminMenu = () => {
 
     useEffect(() => {
         fetchMenuData();
+        fetchCategories();
         fetchModifierGroups();
     }, [currentPage, search, selectedCategory]);
+
+    const fetchCategories = async () => {
+        try {
+            const response = await axios.get("/api/admin/categories");
+            setCategories(response.data.data);
+        } catch (error) {
+            console.error("Error fetching categories:", error);
+        }
+    };
 
     const fetchMenuData = async () => {
         setLoading(true);
@@ -57,9 +67,8 @@ const AdminMenu = () => {
                 params,
             });
 
-            setProducts(response.data.menuItems.data);
-            setCategories(response.data.categories);
-            setTotalPages(response.data.menuItems.last_page);
+            setProducts(response.data.data.data);
+            setTotalPages(response.data.data.last_page);
             setLoading(false);
         } catch (error) {
             console.error("Error fetching menu:", error);
@@ -70,7 +79,7 @@ const AdminMenu = () => {
     const fetchModifierGroups = async () => {
         try {
             const response = await axios.get("/api/admin/modifier-groups");
-            setModifierGroups(response.data);
+            setModifierGroups(response.data.data);
         } catch (error) {
             console.error("Error fetching modifier groups:", error);
         }
@@ -220,16 +229,16 @@ const AdminMenu = () => {
         <div className="space-y-6">
             <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
-                    <h1 className="text-2xl font-bold text-stone-800">
+                    <h1 className="text-2xl font-bold text-coffee-800">
                         Menu Management
                     </h1>
-                    <p className="text-stone-500">
+                    <p className="text-coffee-500">
                         Add, edit, or remove menu items
                     </p>
                 </div>
                 <button
                     onClick={() => handleOpenModal()}
-                    className="w-full sm:w-auto bg-amber-700 text-white px-4 py-2 rounded-xl font-bold flex items-center justify-center space-x-2 hover:bg-amber-800 transition-colors"
+                    className="w-full sm:w-auto bg-coffee-600 text-white px-4 py-2 rounded-xl font-bold flex items-center justify-center space-x-2 hover:bg-coffee-700 transition-colors shadow-sm"
                 >
                     <Plus size={20} />
                     <span>Add New Item</span>
@@ -238,17 +247,17 @@ const AdminMenu = () => {
 
             {/* Modal */}
             {isModalOpen && (
-                <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-                    <div className="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-                        <div className="p-6 border-b border-stone-100 flex justify-between items-center sticky top-0 bg-white z-10">
-                            <h2 className="text-xl font-bold text-stone-800">
+                <div className="fixed inset-0 bg-coffee-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div className="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl border border-coffee-100">
+                        <div className="p-6 border-b border-coffee-100 flex justify-between items-center sticky top-0 bg-white z-10">
+                            <h2 className="text-xl font-bold text-coffee-800">
                                 {editingProduct
                                     ? "Edit Menu Item"
                                     : "Add New Menu Item"}
                             </h2>
                             <button
                                 onClick={() => setIsModalOpen(false)}
-                                className="p-2 hover:bg-stone-100 rounded-full"
+                                className="p-2 hover:bg-coffee-50 text-coffee-400 hover:text-coffee-600 rounded-full transition-colors"
                             >
                                 <X size={20} />
                             </button>
@@ -258,7 +267,7 @@ const AdminMenu = () => {
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div className="space-y-4">
                                     <div>
-                                        <label className="block text-sm font-medium text-stone-700 mb-1">
+                                        <label className="block text-sm font-medium text-coffee-700 mb-1">
                                             Name
                                         </label>
                                         <input
@@ -271,12 +280,12 @@ const AdminMenu = () => {
                                                     name: e.target.value,
                                                 })
                                             }
-                                            className="w-full px-4 py-2 rounded-xl border border-stone-200 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                                            className="w-full px-4 py-2 rounded-xl border border-coffee-200 focus:outline-none focus:ring-2 focus:ring-coffee-500"
                                         />
                                     </div>
 
                                     <div>
-                                        <label className="block text-sm font-medium text-stone-700 mb-1">
+                                        <label className="block text-sm font-medium text-coffee-700 mb-1">
                                             Category
                                         </label>
                                         <select
@@ -288,7 +297,7 @@ const AdminMenu = () => {
                                                     category_id: e.target.value,
                                                 })
                                             }
-                                            className="w-full px-4 py-2 rounded-xl border border-stone-200 focus:outline-none focus:ring-2 focus:ring-amber-500 bg-white"
+                                            className="w-full px-4 py-2 rounded-xl border border-coffee-200 focus:outline-none focus:ring-2 focus:ring-coffee-500 bg-white"
                                         >
                                             <option value="">
                                                 Select Category
@@ -305,11 +314,11 @@ const AdminMenu = () => {
                                     </div>
 
                                     <div>
-                                        <label className="block text-sm font-medium text-stone-700 mb-1">
+                                        <label className="block text-sm font-medium text-coffee-700 mb-1">
                                             Price
                                         </label>
                                         <div className="relative">
-                                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-500">
+                                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-coffee-500">
                                                 Rp
                                             </span>
                                             <input
@@ -323,13 +332,13 @@ const AdminMenu = () => {
                                                         price: e.target.value,
                                                     })
                                                 }
-                                                className="w-full pl-10 pr-4 py-2 rounded-xl border border-stone-200 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                                                className="w-full pl-10 pr-4 py-2 rounded-xl border border-coffee-200 focus:outline-none focus:ring-2 focus:ring-coffee-500"
                                             />
                                         </div>
                                     </div>
 
                                     <div>
-                                        <label className="block text-sm font-medium text-stone-700 mb-1">
+                                        <label className="block text-sm font-medium text-coffee-700 mb-1">
                                             Description
                                         </label>
                                         <textarea
@@ -341,17 +350,17 @@ const AdminMenu = () => {
                                                     description: e.target.value,
                                                 })
                                             }
-                                            className="w-full px-4 py-2 rounded-xl border border-stone-200 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                                            className="w-full px-4 py-2 rounded-xl border border-coffee-200 focus:outline-none focus:ring-2 focus:ring-coffee-500"
                                         />
                                     </div>
                                 </div>
 
                                 <div className="space-y-4">
                                     <div>
-                                        <label className="block text-sm font-medium text-stone-700 mb-1">
+                                        <label className="block text-sm font-medium text-coffee-700 mb-1">
                                             Image
                                         </label>
-                                        <div className="border-2 border-dashed border-stone-200 rounded-xl p-4 text-center hover:bg-stone-50 transition-colors relative">
+                                        <div className="border-2 border-dashed border-coffee-200 rounded-xl p-4 text-center hover:bg-coffee-50 transition-colors relative">
                                             <input
                                                 type="file"
                                                 accept="image/*"
@@ -367,7 +376,7 @@ const AdminMenu = () => {
                                                     />
                                                 </div>
                                             ) : (
-                                                <div className="flex flex-col items-center justify-center py-8 text-stone-400">
+                                                <div className="flex flex-col items-center justify-center py-8 text-coffee-400">
                                                     <ImageIcon
                                                         size={32}
                                                         className="mb-2"
@@ -381,12 +390,12 @@ const AdminMenu = () => {
                                     </div>
 
                                     <div>
-                                        <label className="block text-sm font-medium text-stone-700 mb-2">
+                                        <label className="block text-sm font-medium text-coffee-700 mb-2">
                                             Modifier Groups
                                         </label>
-                                        <div className="border border-stone-200 rounded-xl p-4 max-h-48 overflow-y-auto space-y-2">
+                                        <div className="border border-coffee-200 rounded-xl p-4 max-h-48 overflow-y-auto space-y-2">
                                             {modifierGroups.length === 0 ? (
-                                                <p className="text-sm text-stone-400 text-center">
+                                                <p className="text-sm text-coffee-400 text-center">
                                                     No modifier groups available
                                                 </p>
                                             ) : (
@@ -406,14 +415,14 @@ const AdminMenu = () => {
                                                                     group.id
                                                                 )
                                                             }
-                                                            className="w-4 h-4 text-amber-600 rounded focus:ring-amber-500"
+                                                            className="w-4 h-4 text-coffee-600 rounded focus:ring-coffee-500 border-coffee-300"
                                                         />
                                                         <label
                                                             htmlFor={`group-${group.id}`}
-                                                            className="ml-2 text-sm text-stone-700 cursor-pointer"
+                                                            className="ml-2 text-sm text-coffee-700 cursor-pointer"
                                                         >
                                                             {group.name}
-                                                            <span className="text-xs text-stone-400 ml-1">
+                                                            <span className="text-xs text-coffee-400 ml-1">
                                                                 (
                                                                 {group.type ===
                                                                 "single"
@@ -440,11 +449,11 @@ const AdminMenu = () => {
                                                         e.target.checked,
                                                 })
                                             }
-                                            className="w-4 h-4 text-amber-600 rounded focus:ring-amber-500"
+                                            className="w-4 h-4 text-coffee-600 rounded focus:ring-coffee-500"
                                         />
                                         <label
                                             htmlFor="is_available"
-                                            className="text-sm font-medium text-stone-700"
+                                            className="text-sm font-medium text-coffee-700"
                                         >
                                             Available for Order
                                         </label>
@@ -452,18 +461,18 @@ const AdminMenu = () => {
                                 </div>
                             </div>
 
-                            <div className="pt-4 flex space-x-3 border-t border-stone-100">
+                            <div className="pt-4 flex space-x-3 border-t border-coffee-100">
                                 <button
                                     type="button"
                                     onClick={() => setIsModalOpen(false)}
-                                    className="flex-1 px-4 py-2 border border-stone-200 rounded-xl font-bold text-stone-600 hover:bg-stone-50"
+                                    className="flex-1 px-4 py-2 border border-coffee-200 rounded-xl font-bold text-coffee-600 hover:bg-coffee-50"
                                 >
                                     Cancel
                                 </button>
                                 <button
                                     type="submit"
                                     disabled={isSubmitting}
-                                    className="flex-1 px-4 py-2 bg-amber-700 text-white rounded-xl font-bold hover:bg-amber-800 disabled:opacity-50"
+                                    className="flex-1 px-4 py-2 bg-coffee-600 text-white rounded-xl font-bold hover:bg-coffee-700 disabled:opacity-50"
                                 >
                                     {isSubmitting ? "Saving..." : "Save Item"}
                                 </button>
@@ -473,12 +482,12 @@ const AdminMenu = () => {
                 </div>
             )}
 
-            <div className="bg-white rounded-2xl shadow-sm border border-stone-100 overflow-hidden">
+            <div className="bg-white rounded-2xl shadow-sm border border-coffee-100 overflow-hidden">
                 {/* Search & Filter */}
-                <div className="p-4 border-b border-stone-100 flex flex-col sm:flex-row gap-4 items-center">
+                <div className="p-4 border-b border-coffee-100 flex flex-col sm:flex-row gap-4 items-center">
                     <div className="relative flex-1 w-full sm:max-w-md">
                         <Search
-                            className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400"
+                            className="absolute left-3 top-1/2 -translate-y-1/2 text-coffee-400"
                             size={20}
                         />
                         <input
@@ -486,13 +495,13 @@ const AdminMenu = () => {
                             placeholder="Search menu items..."
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
-                            className="w-full pl-10 pr-4 py-2 rounded-xl border border-stone-200 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                            className="w-full pl-10 pr-4 py-2 rounded-xl border border-coffee-200 focus:outline-none focus:ring-2 focus:ring-coffee-500"
                         />
                     </div>
                     <select
                         value={selectedCategory}
                         onChange={(e) => setSelectedCategory(e.target.value)}
-                        className="w-full sm:w-auto px-4 py-2 rounded-xl border border-stone-200 focus:outline-none focus:ring-2 focus:ring-amber-500 bg-white"
+                        className="w-full sm:w-auto px-4 py-2 rounded-xl border border-coffee-200 focus:outline-none focus:ring-2 focus:ring-coffee-500 bg-white"
                     >
                         <option value="">All Categories</option>
                         {categories.map((cat) => (
@@ -506,7 +515,7 @@ const AdminMenu = () => {
                 {/* Table */}
                 <div className="overflow-x-auto">
                     <table className="w-full">
-                        <thead className="bg-stone-50 text-stone-500 text-sm">
+                        <thead className="bg-coffee-50 text-coffee-500 text-sm">
                             <tr>
                                 <th className="px-6 py-4 text-left font-medium">
                                     Product Name
@@ -525,21 +534,38 @@ const AdminMenu = () => {
                                 </th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-stone-100">
+                        <tbody className="divide-y divide-coffee-100">
                             {loading ? (
-                                <tr>
-                                    <td
-                                        colSpan="5"
-                                        className="px-6 py-8 text-center text-stone-500"
-                                    >
-                                        Loading menu items...
-                                    </td>
-                                </tr>
+                                [...Array(5)].map((_, i) => (
+                                    <tr key={i} className="animate-pulse">
+                                        <td className="px-6 py-4">
+                                            <div className="flex items-center space-x-3">
+                                                <div className="w-10 h-10 bg-gray-200 rounded-lg"></div>
+                                                <div className="h-4 bg-gray-200 rounded w-32"></div>
+                                            </div>
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            <div className="h-4 bg-gray-200 rounded w-24"></div>
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            <div className="h-4 bg-gray-200 rounded w-20"></div>
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            <div className="h-6 bg-gray-200 rounded-full w-24"></div>
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            <div className="flex justify-end gap-2">
+                                                <div className="h-9 w-9 bg-gray-200 rounded-lg"></div>
+                                                <div className="h-9 w-9 bg-gray-200 rounded-lg"></div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))
                             ) : products.length === 0 ? (
                                 <tr>
                                     <td
                                         colSpan="5"
-                                        className="px-6 py-8 text-center text-stone-500"
+                                        className="px-6 py-8 text-center text-coffee-500"
                                     >
                                         No menu items found.
                                     </td>
@@ -548,7 +574,7 @@ const AdminMenu = () => {
                                 products.map((product) => (
                                     <tr
                                         key={product.id}
-                                        className="hover:bg-stone-50 transition-colors"
+                                        className="hover:bg-coffee-50 transition-colors"
                                     >
                                         <td className="px-6 py-4">
                                             <div className="flex items-center space-x-3">
@@ -559,12 +585,12 @@ const AdminMenu = () => {
                                                         className="w-10 h-10 rounded-lg object-cover"
                                                     />
                                                 )}
-                                                <div className="font-medium text-stone-800">
+                                                <div className="font-medium text-coffee-800">
                                                     {product.name}
                                                 </div>
                                             </div>
                                         </td>
-                                        <td className="px-6 py-4 text-stone-600">
+                                        <td className="px-6 py-4 text-coffee-600">
                                             {product.category?.name || "-"}
                                         </td>
                                         <td className="px-6 py-4 font-medium">
@@ -614,7 +640,7 @@ const AdminMenu = () => {
                                                         processingId ===
                                                         product.id
                                                     }
-                                                    className="p-2 hover:bg-stone-100 rounded-lg text-stone-500 hover:text-amber-600 disabled:opacity-50"
+                                                    className="p-2 hover:bg-coffee-100 rounded-lg text-coffee-500 hover:text-coffee-600 disabled:opacity-50"
                                                 >
                                                     <Edit2 size={18} />
                                                 </button>
@@ -626,7 +652,7 @@ const AdminMenu = () => {
                                                         processingId ===
                                                         product.id
                                                     }
-                                                    className="p-2 hover:bg-red-50 rounded-lg text-stone-500 hover:text-red-600 disabled:opacity-50"
+                                                    className="p-2 hover:bg-red-50 rounded-lg text-coffee-500 hover:text-red-600 disabled:opacity-50"
                                                 >
                                                     {processingId ===
                                                     product.id ? (
@@ -648,17 +674,17 @@ const AdminMenu = () => {
                 </div>
 
                 {/* Pagination (Simple) */}
-                <div className="p-4 border-t border-stone-100 flex justify-between items-center">
+                <div className="p-4 border-t border-coffee-100 flex justify-between items-center">
                     <button
                         disabled={currentPage === 1}
                         onClick={() =>
                             setCurrentPage((p) => Math.max(1, p - 1))
                         }
-                        className="px-4 py-2 border border-stone-200 rounded-lg text-sm disabled:opacity-50 hover:bg-stone-50"
+                        className="px-4 py-2 border border-coffee-200 rounded-lg text-sm disabled:opacity-50 hover:bg-coffee-50"
                     >
                         Previous
                     </button>
-                    <span className="text-sm text-stone-500">
+                    <span className="text-sm text-coffee-500">
                         Page {currentPage} of {totalPages}
                     </span>
                     <button
@@ -666,7 +692,7 @@ const AdminMenu = () => {
                         onClick={() =>
                             setCurrentPage((p) => Math.min(totalPages, p + 1))
                         }
-                        className="px-4 py-2 border border-stone-200 rounded-lg text-sm disabled:opacity-50 hover:bg-stone-50"
+                        className="px-4 py-2 border border-coffee-200 rounded-lg text-sm disabled:opacity-50 hover:bg-coffee-50"
                     >
                         Next
                     </button>

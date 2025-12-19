@@ -120,39 +120,40 @@ const ProductDetailDrawer = ({ isOpen, onClose, product }) => {
                                 alt={product.name}
                                 className="w-full h-full object-cover rounded-t-2xl"
                             />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
                             <button
                                 onClick={onClose}
-                                className="absolute top-4 right-4 bg-white/90 p-2 rounded-full shadow-lg"
+                                className="absolute top-4 right-4 bg-white/20 backdrop-blur-md p-2 rounded-full shadow-lg border border-white/30 text-white hover:bg-white/30 transition-colors"
                             >
-                                <X size={20} className="text-stone-800" />
+                                <X size={20} />
                             </button>
                         </div>
 
                         {/* Content Scrollable */}
                         <div className="flex-1 overflow-y-auto p-4 space-y-6 pb-24">
                             <div>
-                                <h2 className="text-2xl font-bold text-stone-800 mb-1">
+                                <h2 className="text-2xl font-bold text-coffee-900 mb-1">
                                     {product.name}
                                 </h2>
-                                <p className="text-stone-500 text-sm leading-relaxed">
+                                <p className="text-coffee-600 text-sm leading-relaxed">
                                     {product.description}
                                 </p>
-                                <div className="mt-2 text-xl font-bold text-amber-600">
+                                <div className="mt-2 text-xl font-bold text-coffee-800">
                                     Rp {product.price.toLocaleString("id-ID")}
                                 </div>
                             </div>
 
-                            <hr className="border-stone-100" />
+                            <hr className="border-coffee-100" />
 
                             {/* Modifiers */}
                             {modifierGroups.map((group) => (
                                 <div key={group.id} className="space-y-3">
                                     <div className="flex justify-between items-center">
-                                        <h3 className="font-bold text-stone-800">
+                                        <h3 className="font-bold text-coffee-800">
                                             {group.name}
                                         </h3>
                                         {group.required && (
-                                            <span className="text-xs font-medium bg-red-100 text-red-600 px-2 py-1 rounded">
+                                            <span className="text-xs font-medium bg-red-100 text-red-600 px-2 py-1 rounded-full">
                                                 Wajib
                                             </span>
                                         )}
@@ -172,30 +173,36 @@ const ProductDetailDrawer = ({ isOpen, onClose, product }) => {
                                                             item
                                                         )
                                                     }
-                                                    className={`flex items-center justify-between p-3 rounded-xl border transition-all cursor-pointer ${
+                                                    className={`flex items-center justify-between p-3.5 rounded-xl border transition-all cursor-pointer ${
                                                         isSelected
-                                                            ? "border-amber-600 bg-amber-50"
-                                                            : "border-stone-200 hover:border-stone-300"
+                                                            ? "border-coffee-600 bg-coffee-50 shadow-sm"
+                                                            : "border-coffee-100 hover:border-coffee-300 hover:bg-coffee-50/50"
                                                     }`}
                                                 >
                                                     <div className="flex items-center space-x-3">
                                                         <div
-                                                            className={`w-5 h-5 rounded-full border flex items-center justify-center ${
+                                                            className={`w-5 h-5 rounded-full border flex items-center justify-center transition-colors ${
                                                                 isSelected
-                                                                    ? "border-amber-600 bg-amber-600"
-                                                                    : "border-stone-300"
+                                                                    ? "border-coffee-600 bg-coffee-600"
+                                                                    : "border-coffee-300"
                                                             }`}
                                                         >
                                                             {isSelected && (
                                                                 <div className="w-2 h-2 bg-white rounded-full" />
                                                             )}
                                                         </div>
-                                                        <span className="text-stone-700 font-medium">
+                                                        <span
+                                                            className={`font-medium ${
+                                                                isSelected
+                                                                    ? "text-coffee-900"
+                                                                    : "text-coffee-700"
+                                                            }`}
+                                                        >
                                                             {item.name}
                                                         </span>
                                                     </div>
                                                     {item.price > 0 && (
-                                                        <span className="text-stone-500 text-sm">
+                                                        <span className="text-coffee-500 text-sm font-medium">
                                                             +Rp{" "}
                                                             {item.price.toLocaleString(
                                                                 "id-ID"
@@ -211,34 +218,34 @@ const ProductDetailDrawer = ({ isOpen, onClose, product }) => {
                         </div>
 
                         {/* Bottom Action Bar */}
-                        <div className="p-4 border-t border-stone-100 bg-white pb-8">
+                        <div className="p-4 border-t border-coffee-100 bg-white pb-8 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
                             <div className="flex items-center space-x-4">
-                                <div className="flex items-center space-x-3 bg-stone-100 rounded-xl p-2">
+                                <div className="flex items-center space-x-3 bg-coffee-50 rounded-xl p-2 border border-coffee-100">
                                     <button
                                         onClick={() =>
                                             setQuantity(
                                                 Math.max(1, quantity - 1)
                                             )
                                         }
-                                        className="w-8 h-8 flex items-center justify-center bg-white rounded-lg shadow-sm text-stone-600 active:scale-95 transition-transform"
+                                        className="w-10 h-10 flex items-center justify-center bg-white rounded-lg shadow-sm text-coffee-700 active:scale-95 transition-transform hover:bg-coffee-100"
                                     >
-                                        <Minus size={16} />
+                                        <Minus size={18} />
                                     </button>
-                                    <span className="font-bold text-lg w-6 text-center">
+                                    <span className="font-bold text-xl w-8 text-center text-coffee-900">
                                         {quantity}
                                     </span>
                                     <button
                                         onClick={() =>
                                             setQuantity(quantity + 1)
                                         }
-                                        className="w-8 h-8 flex items-center justify-center bg-white rounded-lg shadow-sm text-stone-600 active:scale-95 transition-transform"
+                                        className="w-10 h-10 flex items-center justify-center bg-white rounded-lg shadow-sm text-coffee-700 active:scale-95 transition-transform hover:bg-coffee-100"
                                     >
-                                        <Plus size={16} />
+                                        <Plus size={18} />
                                     </button>
                                 </div>
                                 <button
                                     onClick={handleAddToCart}
-                                    className="flex-1 bg-amber-700 text-white p-4 rounded-xl font-bold text-lg shadow-lg shadow-amber-200 active:scale-95 transition-all flex justify-between items-center"
+                                    className="flex-1 bg-coffee-900 text-white p-4 rounded-xl font-bold text-lg shadow-lg shadow-coffee-900/20 active:scale-95 transition-all flex justify-between items-center hover:bg-coffee-800"
                                 >
                                     <span>Add to Order</span>
                                     <span>

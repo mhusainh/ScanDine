@@ -71,7 +71,7 @@ const MenuPage = () => {
     };
 
     return (
-        <div className="min-h-screen bg-stone-50 text-stone-800 font-sans pb-24">
+        <div className="min-h-screen bg-coffee-50 text-coffee-900 font-sans pb-24">
             <Header />
             <CategoryNav
                 categories={DUMMY_CATEGORIES}
