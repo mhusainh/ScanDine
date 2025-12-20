@@ -1,18 +1,18 @@
-import { describe, it, expect } from 'vitest';
-import { render, screen } from '@testing-library/react';
-import Header from '../../../components/shared/Header';
+import { describe, it, expect } from "vitest";
+import { render, screen } from "@testing-library/react";
+import Header from "../../../components/shared/Header";
 
-describe('Header Component', () => {
-    it('renders correctly with default table name', () => {
+describe("Header Component", () => {
+    it("renders correctly with default table name", () => {
         const { container } = render(<Header />);
-        expect(screen.getByText('ScanDine Cafe')).toBeInTheDocument();
-        expect(screen.getByText('Table Unknown')).toBeInTheDocument();
+        expect(screen.getByText("ScanDine Cafe")).toBeInTheDocument();
+        expect(screen.getByText("Table Unknown")).toBeInTheDocument();
         expect(container).toMatchSnapshot();
     });
 
-    it('renders correctly with provided table name', () => {
+    it("renders correctly with provided table name", () => {
         const { container } = render(<Header tableName="Meja 5" />);
-        expect(screen.getByText('Meja 5')).toBeInTheDocument();
+        expect(screen.getByText("Meja 5")).toBeInTheDocument();
         expect(container).toMatchSnapshot();
     });
 });
