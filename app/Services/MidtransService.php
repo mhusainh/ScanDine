@@ -64,9 +64,21 @@ class MidtransService
                 'error' => route('payment.error'),
             ],
             'enabled_payments' => [
-                'gopay', 'shopeepay', 'other_qris',
-                'bca_va', 'bni_va', 'bri_va', 'permata_va',
-                'other_va', 'alfamart', 'indomaret'
+                'gopay',
+                'shopeepay',
+                'other_qris',
+                'bca_va',
+                'bni_va',
+                'bri_va',
+                'permata_va',
+                'other_va',
+                'alfamart',
+                'indomaret'
+            ],
+            'callbacks' => [
+                'finish' => 'https://josiah-interfacial-overprosperously.ngrok-free.dev/api/v1/payment/finish',
+                'unfinish' => 'https://josiah-interfacial-overprosperously.ngrok-free.dev/api/v1/payment/unfinish',
+                'error' => 'https://josiah-interfacial-overprosperously.ngrok-free.dev/api/v1/payment/error',
             ],
             'custom_field1' => $order->order_number,
             'custom_field2' => 'ScanDine-Order',
@@ -88,7 +100,6 @@ class MidtransService
             );
 
             return $snapToken;
-
         } catch (\Exception $e) {
             Log::error('Midtrans error: ' . $e->getMessage());
             throw new \Exception('Gagal membuat transaksi pembayaran: ' . $e->getMessage());
@@ -107,11 +118,12 @@ class MidtransService
             $paymentType = $notification->payment_type ?? '';
 
             // Verify signature key
-            $signatureKey = hash('sha512', 
-                $notification->order_id . 
-                $notification->status_code . 
-                $notification->gross_amount . 
-                Config::$serverKey
+            $signatureKey = hash(
+                'sha512',
+                $notification->order_id .
+                    $notification->status_code .
+                    $notification->gross_amount .
+                    Config::$serverKey
             );
 
             if ($signatureKey !== $notification->signature_key) {
@@ -152,7 +164,6 @@ class MidtransService
             }
 
             return true;
-
         } catch (\Exception $e) {
             Log::error('Midtrans callback error: ' . $e->getMessage());
             return false;
