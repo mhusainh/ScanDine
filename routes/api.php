@@ -36,6 +36,11 @@ Route::prefix('v1')->group(function () {
 
     // Payment Callback (Midtrans Webhook)
     Route::post('/payment/callback', [PaymentController::class, 'callback']);
+
+    // Payment Redirect Routes (From Midtrans UI)
+    Route::get('/payment/finish', [PaymentController::class, 'finish'])->name('payment.finish');
+    Route::get('/payment/unfinish', [PaymentController::class, 'unfinish'])->name('payment.unfinish');
+    Route::get('/payment/error', [PaymentController::class, 'error'])->name('payment.error');
 });
 
 // Admin Routes (Protected)

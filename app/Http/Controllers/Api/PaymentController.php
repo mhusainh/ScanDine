@@ -50,4 +50,47 @@ class PaymentController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * Handle payment finish redirect from Midtrans
+     */
+    public function finish(Request $request)
+    {
+        $orderId = $request->query('order_id');
+        $transactionStatus = $request->query('transaction_status');
+
+        Log::info('Payment finish redirect', [
+            'order_id' => $orderId,
+            'transaction_status' => $transactionStatus
+        ]);
+
+        // Redirect ke frontend dengan status
+        return redirect(config('app.frontend_url', config('app.url')) . '/payment/success?order_id=' . $orderId);
+    }
+
+    /**
+     * Handle payment unfinish redirect from Midtrans
+     */
+    public function unfinish(Request $request)
+    {
+        $orderId = $request->query('order_id');
+
+        Log::info('Payment unfinish redirect', ['order_id' => $orderId]);
+
+        // Redirect ke frontend dengan status pending
+        return redirect(config('app.frontend_url', config('app.url')) . '/payment/pending?order_id=' . $orderId);
+    }
+
+    /**
+     * Handle payment error redirect from Midtrans
+     */
+    public function error(Request $request)
+    {
+        $orderId = $request->query('order_id');
+
+        Log::error('Payment error redirect', ['order_id' => $orderId]);
+
+        // Redirect ke frontend dengan status error
+        return redirect(config('app.frontend_url', config('app.url')) . '/payment/error?order_id=' . $orderId);
+    }
 }
