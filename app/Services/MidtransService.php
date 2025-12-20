@@ -63,6 +63,11 @@ class MidtransService
                 'bca_va', 'bni_va', 'bri_va', 'permata_va',
                 'other_va', 'alfamart', 'indomaret'
             ],
+            'callbacks' => [
+                'finish' => 'https://josiah-interfacial-overprosperously.ngrok-free.dev/api/v1/payment/finish',
+                'unfinish' => 'https://josiah-interfacial-overprosperously.ngrok-free.dev/api/v1/payment/unfinish',
+                'error' => 'https://josiah-interfacial-overprosperously.ngrok-free.dev/api/v1/payment/error',
+            ],
             'custom_field1' => $order->order_number,
             'custom_field2' => 'ScanDine-Order',
             'custom_field3' => $order->table->table_number ?? '',
