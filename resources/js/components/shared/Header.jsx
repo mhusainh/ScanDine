@@ -7,9 +7,9 @@ import PropTypes from 'prop-types';
  * 
  * @component
  * @param {object} props
- * @param {string} props.tableNumber - The current table number (optional)
+ * @param {string} props.tableName - The table name from API (optional)
  */
-const Header = ({ tableNumber = 'Unknown' }) => {
+const Header = ({ tableName = 'Table Unknown' }) => {
     return (
         <header className="bg-white/90 backdrop-blur-md shadow-sm sticky top-0 z-30 border-b border-coffee-100">
             <div className="container mx-auto px-4 h-16 flex items-center justify-between">
@@ -20,7 +20,7 @@ const Header = ({ tableNumber = 'Unknown' }) => {
                     <h1 className="text-xl font-bold text-coffee-900 tracking-tight">ScanDine Cafe</h1>
                 </div>
                 <div className="text-sm font-medium text-coffee-600 bg-coffee-50 px-3 py-1 rounded-full border border-coffee-200">
-                    Table #{tableNumber}
+                    Table {tableName}
                 </div>
             </div>
         </header>
@@ -28,7 +28,7 @@ const Header = ({ tableNumber = 'Unknown' }) => {
 };
 
 Header.propTypes = {
-    tableNumber: PropTypes.string
+    tableName: PropTypes.string
 };
 
 export default Header;

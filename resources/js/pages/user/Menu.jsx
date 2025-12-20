@@ -10,6 +10,7 @@ import { useMenu } from "../../hooks/useMenu";
 
 const MenuPage = () => {
     const {
+        table,
         categories,
         activeCategory,
         setActiveCategory,
@@ -56,7 +57,7 @@ const MenuPage = () => {
 
     return (
         <div className="min-h-screen bg-coffee-50 text-coffee-900 font-sans pb-24">
-            <Header />
+            <Header tableName={table?.name} />
             <CategoryNav
                 categories={categories}
                 activeCategory={activeCategory}

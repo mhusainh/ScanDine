@@ -118,6 +118,7 @@ class MenuController extends Controller
                 'table' => [
                     'uuid' => $table->uuid,
                     'table_number' => $table->table_number,
+                    'name' => $table->table_number,
                     'status' => $table->status
                 ],
                 'categories' => $categories
