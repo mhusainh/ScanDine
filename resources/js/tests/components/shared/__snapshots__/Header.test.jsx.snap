@@ -1,0 +1,67 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Header Component > renders correctly with default table number 1`] = `
+<div>
+  <header
+    class="bg-white/90 backdrop-blur-md shadow-sm sticky top-0 z-30 border-b border-coffee-100"
+  >
+    <div
+      class="container mx-auto px-4 h-16 flex items-center justify-between"
+    >
+      <div
+        class="flex items-center space-x-2"
+      >
+        <div
+          class="w-9 h-9 bg-coffee-800 rounded-full flex items-center justify-center text-white font-bold shadow-md"
+        >
+          ☕
+        </div>
+        <h1
+          class="text-xl font-bold text-coffee-900 tracking-tight"
+        >
+          ScanDine Cafe
+        </h1>
+      </div>
+      <div
+        class="text-sm font-medium text-coffee-600 bg-coffee-50 px-3 py-1 rounded-full border border-coffee-200"
+      >
+        Table #
+        Unknown
+      </div>
+    </div>
+  </header>
+</div>
+`;
+
+exports[`Header Component > renders correctly with provided table number 1`] = `
+<div>
+  <header
+    class="bg-white/90 backdrop-blur-md shadow-sm sticky top-0 z-30 border-b border-coffee-100"
+  >
+    <div
+      class="container mx-auto px-4 h-16 flex items-center justify-between"
+    >
+      <div
+        class="flex items-center space-x-2"
+      >
+        <div
+          class="w-9 h-9 bg-coffee-800 rounded-full flex items-center justify-center text-white font-bold shadow-md"
+        >
+          ☕
+        </div>
+        <h1
+          class="text-xl font-bold text-coffee-900 tracking-tight"
+        >
+          ScanDine Cafe
+        </h1>
+      </div>
+      <div
+        class="text-sm font-medium text-coffee-600 bg-coffee-50 px-3 py-1 rounded-full border border-coffee-200"
+      >
+        Table #
+        5
+      </div>
+    </div>
+  </header>
+</div>
+`;

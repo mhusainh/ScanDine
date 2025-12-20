@@ -17,7 +17,7 @@ class MenuItemController extends Controller
      */
     public function index(Request $request)
     {
-        $query = MenuItem::with(['category', 'modifierGroups']);
+        $query = MenuItem::with(['category']); // Removed modifierGroups for performance
 
         // Filter by category
         if ($request->has('category_id') && $request->category_id != '') {
@@ -54,7 +54,7 @@ class MenuItemController extends Controller
             'description' => $request->description,
             'price' => $request->price,
             'sort_order' => $request->sort_order ?? 0,
-            'is_available' => $request->has('is_available') ? true : false,
+            'is_available' => $request->boolean('is_available'),
         ];
 
         // Upload image to Cloudinary
@@ -129,7 +129,7 @@ class MenuItemController extends Controller
             'description' => $request->description,
             'price' => $request->price,
             'sort_order' => $request->sort_order ?? 0,
-            'is_available' => $request->has('is_available') ? true : false,
+            'is_available' => $request->boolean('is_available'),
         ];
 
         // Upload new image to Cloudinary

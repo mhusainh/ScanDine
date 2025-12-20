@@ -1,0 +1,35 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`CategoryNav Component > should render categories correctly 1`] = `
+<div>
+  <div
+    class="sticky top-16 z-20 bg-coffee-50/95 backdrop-blur-sm pt-4 pb-2 shadow-sm overflow-x-auto border-b border-coffee-100"
+  >
+    <div
+      class="flex space-x-3 px-4 min-w-max pb-2"
+    >
+      <button
+        class="px-5 py-2.5 rounded-full text-sm font-semibold transition-all duration-200 
+                            bg-coffee-800 text-white shadow-lg shadow-coffee-800/20 scale-105"
+        data-testid="category-btn-1"
+      >
+        Makanan
+      </button>
+      <button
+        class="px-5 py-2.5 rounded-full text-sm font-semibold transition-all duration-200 
+                            bg-white text-coffee-600 border border-coffee-200 hover:bg-coffee-100 hover:border-coffee-300"
+        data-testid="category-btn-2"
+      >
+        Minuman
+      </button>
+      <button
+        class="px-5 py-2.5 rounded-full text-sm font-semibold transition-all duration-200 
+                            bg-white text-coffee-600 border border-coffee-200 hover:bg-coffee-100 hover:border-coffee-300"
+        data-testid="category-btn-3"
+      >
+        Snack
+      </button>
+    </div>
+  </div>
+</div>
+`;

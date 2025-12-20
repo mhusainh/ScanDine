@@ -7,6 +7,7 @@ use App\Models\Category;
 use App\Models\MenuItem;
 use App\Models\Table;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 
 class MenuController extends Controller
 {
@@ -33,7 +34,10 @@ class MenuController extends Controller
             ], 404);
         }
 
-        $table = Table::where('uuid', $tableUuid)->first();
+        // Cache table lookup for 60 minutes since table UUIDs rarely change
+        $table = Cache::remember("table_{$tableUuid}", 3600, function () use ($tableUuid) {
+            return Table::where('uuid', $tableUuid)->first();
+        });
 
         if (!$table) {
             return response()->json([
@@ -49,51 +53,64 @@ class MenuController extends Controller
         $maxPrice = $request->query('max_price');
         $available = $request->query('available'); // 1 or 0
 
-        // Get categories with menu items
-        $categoriesQuery = Category::active();
+        // Create a unique cache key based on all filter parameters
+        $cacheKey = "menu_categories_" . md5(json_encode([
+            'search' => $search,
+            'category' => $categoryId,
+            'min_price' => $minPrice,
+            'max_price' => $maxPrice,
+            'available' => $available
+        ]));
 
-        // Filter by specific category if provided
-        if ($categoryId) {
-            $categoriesQuery->where('id', $categoryId);
-        }
+        // Cache menu structure for 30 minutes
+        // We can clear this cache when menu items are updated via Admin
+        $categories = Cache::remember($cacheKey, 1800, function () use ($search, $categoryId, $minPrice, $maxPrice, $available) {
+            // Get categories with menu items
+            $categoriesQuery = Category::active();
 
-        $categories = $categoriesQuery
-            ->with(['menuItems' => function ($query) use ($search, $minPrice, $maxPrice, $available) {
-                // Filter by availability (default: only available items)
-                if ($available !== null && $available !== '') {
-                    $query->where('is_available', $available == 1);
-                } else {
-                    $query->where('is_available', true);
-                }
+            // Filter by specific category if provided
+            if ($categoryId) {
+                $categoriesQuery->where('id', $categoryId);
+            }
 
-                // Apply search filter
-                if ($search) {
-                    $query->where(function ($q) use ($search) {
-                        $q->where('name', 'ILIKE', '%' . $search . '%')
-                            ->orWhere('description', 'ILIKE', '%' . $search . '%');
-                    });
-                }
+            return $categoriesQuery
+                ->with(['menuItems' => function ($query) use ($search, $minPrice, $maxPrice, $available) {
+                    // Filter by availability (default: only available items)
+                    if ($available !== null && $available !== '') {
+                        $query->where('is_available', $available == 1);
+                    } else {
+                        $query->where('is_available', true);
+                    }
 
-                // Filter by minimum price
-                if ($minPrice !== null && $minPrice !== '') {
-                    $query->where('price', '>=', $minPrice);
-                }
+                    // Apply search filter
+                    if ($search) {
+                        $query->where(function ($q) use ($search) {
+                            $q->where('name', 'ILIKE', '%' . $search . '%')
+                                ->orWhere('description', 'ILIKE', '%' . $search . '%');
+                        });
+                    }
 
-                // Filter by maximum price
-                if ($maxPrice !== null && $maxPrice !== '') {
-                    $query->where('price', '<=', $maxPrice);
-                }
+                    // Filter by minimum price
+                    if ($minPrice !== null && $minPrice !== '') {
+                        $query->where('price', '>=', $minPrice);
+                    }
 
-                $query->with(['modifierGroups' => function ($q) {
-                    $q->with(['modifierItems' => function ($mq) {
-                        $mq->where('is_available', true)
-                            ->orderBy('sort_order');
-                    }])->orderBy('sort_order');
+                    // Filter by maximum price
+                    if ($maxPrice !== null && $maxPrice !== '') {
+                        $query->where('price', '<=', $maxPrice);
+                    }
+
+                    $query->with(['modifierGroups' => function ($q) {
+                        $q->with(['modifierItems' => function ($mq) {
+                            $mq->where('is_available', true)
+                                ->orderBy('sort_order');
+                        }])->orderBy('sort_order');
+                    }])
+                        ->orderBy('sort_order');
                 }])
-                    ->orderBy('sort_order');
-            }])
-            ->ordered()
-            ->get();
+                ->ordered()
+                ->get();
+        });
 
         return response()->json([
             'success' => true,

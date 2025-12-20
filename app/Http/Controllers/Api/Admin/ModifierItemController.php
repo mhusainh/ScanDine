@@ -56,7 +56,7 @@ class ModifierItemController extends Controller
             'modifier_group_id' => $modifierGroupId,
             'name' => $request->name,
             'price' => $request->price,
-            'is_available' => $request->has('is_available') ? true : false,
+            'is_available' => $request->boolean('is_available'),
             'sort_order' => $request->sort_order ?? 0,
         ]);
 
@@ -106,7 +106,7 @@ class ModifierItemController extends Controller
         $modifierItem->update([
             'name' => $request->name,
             'price' => $request->price,
-            'is_available' => $request->has('is_available') ? true : false,
+            'is_available' => $request->boolean('is_available'),
             'sort_order' => $request->sort_order ?? 0,
         ]);
 

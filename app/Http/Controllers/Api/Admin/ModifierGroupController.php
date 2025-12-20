@@ -7,6 +7,7 @@ use App\Models\ModifierGroup;
 use App\Http\Requests\Admin\ModifierGroup\StoreModifierGroupRequest;
 use App\Http\Requests\Admin\ModifierGroup\UpdateModifierGroupRequest;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 
 class ModifierGroupController extends Controller
 {
@@ -40,12 +41,13 @@ class ModifierGroupController extends Controller
      */
     public function store(StoreModifierGroupRequest $request)
     {
+        Cache::forget('admin_modifier_groups_all');
         $modifierGroup = ModifierGroup::create([
             'name' => $request->name,
             'type' => $request->type,
             'min_selection' => $request->min_selection ?? 0,
             'max_selection' => $request->max_selection,
-            'is_required' => $request->has('is_required') ? true : false,
+            'is_required' => $request->boolean('is_required'),
             'sort_order' => $request->sort_order ?? 0,
         ]);
 
@@ -90,12 +92,14 @@ class ModifierGroupController extends Controller
             ], 404);
         }
 
+        Cache::forget('admin_modifier_groups_all');
+
         $modifierGroup->update([
             'name' => $request->name,
             'type' => $request->type,
             'min_selection' => $request->min_selection ?? 0,
             'max_selection' => $request->max_selection,
-            'is_required' => $request->has('is_required') ? true : false,
+            'is_required' => $request->boolean('is_required'),
             'sort_order' => $request->sort_order ?? 0,
         ]);
 
@@ -128,6 +132,7 @@ class ModifierGroupController extends Controller
             ], 400);
         }
 
+        Cache::forget('admin_modifier_groups_all');
         $modifierGroup->delete();
 
         return response()->json([

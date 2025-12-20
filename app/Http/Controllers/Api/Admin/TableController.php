@@ -189,7 +189,7 @@ class TableController extends Controller
             ], 404);
         }
 
-        $menuUrl = url('/menu?table=' . $table->uuid);
+        $menuUrl = url('/menu/' . $table->uuid);
         $qrCode = QrCode::format('png')->size(300)->generate($menuUrl);
 
         return response($qrCode, 200)

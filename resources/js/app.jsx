@@ -1,24 +1,25 @@
 import React, { Suspense, lazy } from "react";
 import ReactDOM from "react-dom/client";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { CartProvider } from "./context/CartContext";
-import { AuthProvider } from "./context/AuthContext";
+import { CartProvider } from "./contexts/CartContext";
+import { AuthProvider } from "./contexts/AuthContext";
 
 // Lazy Load Pages
-const MenuPage = lazy(() => import("./user/menu/Index"));
-const CheckoutPage = lazy(() => import("./user/checkout/Index"));
-const SuccessPage = lazy(() => import("./user/success/Index"));
+const MenuPage = lazy(() => import("./pages/user/Menu"));
+const CheckoutPage = lazy(() => import("./pages/user/Checkout"));
+const SuccessPage = lazy(() => import("./pages/user/Success"));
+const NotFound = lazy(() => import("./pages/NotFound"));
 
 // Admin Imports (Lazy)
-const AdminLayout = lazy(() => import("./global_components/AdminLayout"));
-const AdminLogin = lazy(() => import("./admin/auth/Login"));
-import ProtectedRoute from "./global_components/ProtectedRoute"; // Keep synchronous as it's a lightweight wrapper
-const AdminDashboard = lazy(() => import("./admin/dashboard/Index"));
-const AdminOrders = lazy(() => import("./admin/orders/Index"));
-const AdminMenu = lazy(() => import("./admin/menu/Index"));
-const AdminCategories = lazy(() => import("./admin/categories/Index"));
-const AdminModifiers = lazy(() => import("./admin/modifiers/Index"));
-const AdminTables = lazy(() => import("./admin/tables/Index"));
+const AdminLayout = lazy(() => import("./layouts/AdminLayout"));
+const AdminLogin = lazy(() => import("./pages/auth/Login"));
+import ProtectedRoute from "./components/shared/ProtectedRoute"; // Keep synchronous as it's a lightweight wrapper
+const AdminDashboard = lazy(() => import("./pages/admin/Dashboard"));
+const AdminOrders = lazy(() => import("./pages/admin/Orders"));
+const AdminMenu = lazy(() => import("./pages/admin/Menu"));
+const AdminCategories = lazy(() => import("./pages/admin/Categories"));
+const AdminModifiers = lazy(() => import("./pages/admin/Modifiers"));
+const AdminTables = lazy(() => import("./pages/admin/Tables"));
 
 const LoadingFallback = () => (
     <div className="flex items-center justify-center min-h-screen bg-coffee-50">
@@ -42,6 +43,12 @@ const App = () => {
                             <Route
                                 path="/"
                                 element={<Navigate to="/menu" replace />}
+                            />
+                            {/* Support both path param and query param for backward compatibility if needed, 
+                                but prioritizing the path param as requested */}
+                            <Route
+                                path="/menu/:tableUuid"
+                                element={<MenuPage />}
                             />
                             <Route path="/menu" element={<MenuPage />} />
                             <Route
@@ -93,6 +100,9 @@ const App = () => {
                                     />
                                 </Route>
                             </Route>
+
+                            {/* Catch-all Route */}
+                            <Route path="*" element={<NotFound />} />
                         </Routes>
                     </Suspense>
                 </BrowserRouter>

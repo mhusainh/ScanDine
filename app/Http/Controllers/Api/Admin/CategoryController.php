@@ -7,6 +7,7 @@ use App\Models\Category;
 use App\Http\Requests\Admin\Category\StoreCategoryRequest;
 use App\Http\Requests\Admin\Category\UpdateCategoryRequest;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 
 class CategoryController extends Controller
 {
@@ -40,11 +41,12 @@ class CategoryController extends Controller
      */
     public function store(StoreCategoryRequest $request)
     {
+        Cache::forget('admin_categories_all');
         $category = Category::create([
             'name' => $request->name,
             'description' => $request->description,
             'sort_order' => $request->sort_order ?? 0,
-            'is_active' => $request->has('is_active') ? true : false,
+            'is_active' => $request->boolean('is_active'),
         ]);
 
         return response()->json([
@@ -88,11 +90,13 @@ class CategoryController extends Controller
             ], 404);
         }
 
+        Cache::forget('admin_categories_all');
+
         $category->update([
             'name' => $request->name,
             'description' => $request->description,
             'sort_order' => $request->sort_order ?? 0,
-            'is_active' => $request->has('is_active') ? true : false,
+            'is_active' => $request->boolean('is_active'),
         ]);
 
         return response()->json([
@@ -124,6 +128,7 @@ class CategoryController extends Controller
             ], 400);
         }
 
+        Cache::forget('admin_categories_all');
         $category->delete();
 
         return response()->json([
@@ -146,6 +151,7 @@ class CategoryController extends Controller
             ], 404);
         }
 
+        Cache::forget('admin_categories_all');
         $category->update(['is_active' => !$category->is_active]);
 
         return response()->json([
