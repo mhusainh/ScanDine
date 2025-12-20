@@ -48,13 +48,10 @@ export const useCheckout = () => {
      * @param {string} snapToken
      * @param {object} order
      */
-    const handleSnapPayment = useCallback(
-        (snapToken, order) => {
-            // Redirect to Midtrans Snap Page
-            window.location.href = `https://app.sandbox.midtrans.com/snap/v2/vtweb/${snapToken}`;
-        },
-        []
-    );
+    const handleSnapPayment = useCallback((snapToken, order) => {
+        // Redirect to Midtrans Snap Page
+        window.location.href = `https://app.sandbox.midtrans.com/snap/v2/vtweb/${snapToken}`;
+    }, []);
 
     /**
      * Process checkout

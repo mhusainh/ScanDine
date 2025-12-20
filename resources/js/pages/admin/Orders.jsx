@@ -8,8 +8,10 @@ import {
     List,
 } from "lucide-react";
 import axios from "../../libs/axios";
+import { useToast } from "../../contexts/ToastContext";
 
 const AdminOrders = () => {
+    const { error: toastError, success } = useToast();
     const [orders, setOrders] = useState([]);
     const [loading, setLoading] = useState(true);
     const [viewMode, setViewMode] = useState("active"); // 'active' or 'history'
@@ -83,7 +85,7 @@ const AdminOrders = () => {
             }
         } catch (error) {
             console.error("Error updating status:", error);
-            alert("Failed to update status");
+            toastError("Failed to update status");
         } finally {
             setProcessingId(null);
         }

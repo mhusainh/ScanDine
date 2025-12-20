@@ -86,9 +86,10 @@ const AdminTables = () => {
         try {
             await axios.delete(`${API_ENDPOINT}/${id}`);
             setTables(tables.filter((t) => t.id !== id));
+            success("Table deleted successfully");
         } catch (error) {
             console.error("Error deleting table:", error);
-            alert("Failed to delete table");
+            toastError("Failed to delete table");
         } finally {
             setProcessingId(null);
         }

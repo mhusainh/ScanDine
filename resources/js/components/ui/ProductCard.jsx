@@ -13,7 +13,7 @@ import ImageWithFallback from "./ImageWithFallback";
  * @param {function} props.onAdd - Handler for adding product to cart
  */
 const ProductCard = ({ product, onAdd }) => {
-    const { name, image, description, price } = product;
+    const { name, image, url_file, description, price } = product;
 
     return (
         <div
@@ -23,7 +23,7 @@ const ProductCard = ({ product, onAdd }) => {
         >
             <div className="aspect-[4/3] w-full overflow-hidden relative bg-coffee-100">
                 <ImageWithFallback
-                    src={image}
+                    src={url_file || image}
                     alt={name}
                     className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                     loading="lazy"

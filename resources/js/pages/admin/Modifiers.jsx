@@ -11,8 +11,10 @@ import {
     Loader2,
 } from "lucide-react";
 import axios from "../../libs/axios";
+import { useToast } from "../../contexts/ToastContext";
 
 const AdminModifiers = () => {
+    const { success, error: toastError } = useToast();
     const [modifierGroups, setModifierGroups] = useState([]);
     const [loading, setLoading] = useState(true);
     const [expandedGroups, setExpandedGroups] = useState({}); // Map of groupId -> items
@@ -143,9 +145,10 @@ const AdminModifiers = () => {
             try {
                 await axios.delete(`/api/admin/modifier-groups/${id}`);
                 setModifierGroups(modifierGroups.filter((g) => g.id !== id));
+                success("Modifier group deleted successfully");
             } catch (error) {
                 console.error("Error deleting group:", error);
-                alert(
+                toastError(
                     "Failed to delete group: " +
                         (error.response?.data?.message || error.message)
                 );
@@ -239,9 +242,10 @@ const AdminModifiers = () => {
                     ...expandedGroups,
                     [groupId]: newItems,
                 });
+                success("Modifier item deleted successfully");
             } catch (error) {
                 console.error("Error deleting item:", error);
-                alert("Failed to delete item");
+                toastError("Failed to delete item");
                 fetchModifierItems(groupId);
             } finally {
                 setProcessingId(null);

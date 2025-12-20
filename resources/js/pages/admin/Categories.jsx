@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { Plus, Edit2, Trash2, Power, X } from "lucide-react";
 import axios from "../../libs/axios";
+import { useToast } from "../../contexts/ToastContext";
 
 const AdminCategories = () => {
+    const { success, error: toastError } = useToast();
     const [categories, setCategories] = useState([]);
     const [loading, setLoading] = useState(true);
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -43,7 +45,7 @@ const AdminCategories = () => {
             );
         } catch (error) {
             console.error("Error toggling category status:", error);
-            alert("Failed to toggle status");
+            toastError("Failed to toggle status");
             fetchCategories(); // Revert on error
         }
     };
@@ -53,9 +55,10 @@ const AdminCategories = () => {
             try {
                 await axios.delete(`/api/admin/categories/${id}`);
                 setCategories(categories.filter((cat) => cat.id !== id));
+                success("Category deleted successfully");
             } catch (error) {
                 console.error("Error deleting category:", error);
-                alert(
+                toastError(
                     "Failed to delete category: " +
                         (error.response?.data?.message || error.message)
                 );
@@ -93,9 +96,14 @@ const AdminCategories = () => {
             }
             fetchCategories();
             setIsModalOpen(false);
+            success(
+                editingCategory
+                    ? "Category updated successfully"
+                    : "Category created successfully"
+            );
         } catch (error) {
             console.error("Error saving category:", error);
-            alert("Failed to save category");
+            toastError("Failed to save category");
         } finally {
             setIsSubmitting(false);
         }

@@ -24,15 +24,13 @@ export const useMenu = () => {
     });
 
     /**
-     * Get and persist Table UUID
+     * Get Table UUID
+     * Now strictly returns the UUID from params/URL only.
+     * No longer persists to localStorage for security/access control.
      * @returns {string|null} Table UUID
      */
     const getTableUuid = useCallback(() => {
-        if (tableUuid) {
-            localStorage.setItem("table_uuid", tableUuid);
-            return tableUuid;
-        }
-        return localStorage.getItem("table_uuid");
+        return tableUuid;
     }, [tableUuid]);
 
     /**

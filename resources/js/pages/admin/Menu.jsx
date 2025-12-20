@@ -12,8 +12,11 @@ import {
     ChevronRight,
 } from "lucide-react";
 import axios from "../../libs/axios";
+import ImageWithFallback from "../../components/ui/ImageWithFallback";
+import { useToast } from "../../contexts/ToastContext";
 
 const AdminMenu = () => {
+    const { success, error: toastError } = useToast();
     const [products, setProducts] = useState([]);
     const [categories, setCategories] = useState([]);
     const [modifierGroups, setModifierGroups] = useState([]);
@@ -104,7 +107,7 @@ const AdminMenu = () => {
             );
         } catch (error) {
             console.error("Error toggling availability:", error);
-            alert("Failed to update availability");
+            toastError("Failed to update availability");
         } finally {
             setProcessingId(null);
         }
@@ -122,7 +125,7 @@ const AdminMenu = () => {
             setProducts(products.filter((p) => p.id !== id));
         } catch (error) {
             console.error("Error deleting item:", error);
-            alert("Failed to delete item");
+            toastError("Failed to delete item");
         } finally {
             setProcessingId(null);
         }
@@ -293,15 +296,41 @@ const AdminMenu = () => {
         }
     };
 
+    // Cleanup object URLs to avoid memory leaks
+    useEffect(() => {
+        return () => {
+            if (imagePreview && imagePreview.startsWith("blob:")) {
+                URL.revokeObjectURL(imagePreview);
+            }
+        };
+    }, [imagePreview]);
+
     const handleImageChange = (e) => {
         const file = e.target.files[0];
         if (file) {
-            setFormData({ ...formData, image: file });
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                setImagePreview(reader.result);
-            };
-            reader.readAsDataURL(file);
+            // Validation: File Type
+            if (!file.type.startsWith("image/")) {
+                toastError(
+                    "Please upload a valid image file (JPG, PNG, WebP)."
+                );
+                return;
+            }
+
+            // Validation: File Size (max 2MB)
+            if (file.size > 2 * 1024 * 1024) {
+                toastError("Image size must be less than 2MB.");
+                return;
+            }
+
+            try {
+                setFormData({ ...formData, image: file });
+                // Use createObjectURL instead of FileReader to prevent memory issues and crashes
+                const objectUrl = URL.createObjectURL(file);
+                setImagePreview(objectUrl);
+            } catch (error) {
+                console.error("Error creating image preview:", error);
+                toastError("Failed to process image. Please try another file.");
+            }
         }
     };
 
@@ -356,9 +385,14 @@ const AdminMenu = () => {
 
             setIsModalOpen(false);
             fetchMenuData(); // Refresh list
+            success(
+                editingProduct
+                    ? "Menu item updated successfully"
+                    : "Menu item created successfully"
+            );
         } catch (error) {
             console.error("Error saving menu item:", error);
-            alert("Failed to save menu item. Please check your input.");
+            toastError("Failed to save menu item. Please check your input.");
         } finally {
             setIsSubmitting(false);
         }

@@ -75,7 +75,7 @@ describe("useMenu Hook", () => {
         expect(MenuService.getMenu).not.toHaveBeenCalled();
     });
 
-    it("should use table UUID from params and save to localStorage", async () => {
+    it("should use table UUID from params and NOT save to localStorage", async () => {
         const tableUuid = "uuid-from-params";
         mockSearchParams.get.mockReturnValue(null);
         useParams.mockReturnValue({ tableUuid });
@@ -95,14 +95,11 @@ describe("useMenu Hook", () => {
             expect(result.current.loading).toBe(false);
         });
 
-        expect(window.localStorage.setItem).toHaveBeenCalledWith(
-            "table_uuid",
-            tableUuid
-        );
+        expect(window.localStorage.setItem).not.toHaveBeenCalled();
         expect(MenuService.getMenu).toHaveBeenCalledWith(tableUuid);
     });
 
-    it("should use table UUID from URL and save to localStorage", async () => {
+    it("should use table UUID from URL and NOT save to localStorage", async () => {
         const tableUuid = "uuid-from-url";
         mockSearchParams.get.mockReturnValue(tableUuid);
 
@@ -121,26 +118,14 @@ describe("useMenu Hook", () => {
             expect(result.current.loading).toBe(false);
         });
 
-        expect(window.localStorage.setItem).toHaveBeenCalledWith(
-            "table_uuid",
-            tableUuid
-        );
+        expect(window.localStorage.setItem).not.toHaveBeenCalled();
         expect(MenuService.getMenu).toHaveBeenCalledWith(tableUuid);
     });
 
-    it("should use table UUID from localStorage if not in URL", async () => {
+    it("should NOT use table UUID from localStorage if not in URL", async () => {
         const tableUuid = "uuid-from-storage";
         mockSearchParams.get.mockReturnValue(null);
         window.localStorage.getItem.mockReturnValue(tableUuid);
-
-        const mockData = {
-            table: { id: 1, number: "5" },
-            categories: [],
-        };
-        MenuService.getMenu.mockResolvedValue({
-            success: true,
-            data: mockData,
-        });
 
         const { result } = renderHook(() => useMenu());
 
@@ -148,7 +133,11 @@ describe("useMenu Hook", () => {
             expect(result.current.loading).toBe(false);
         });
 
-        expect(MenuService.getMenu).toHaveBeenCalledWith(tableUuid);
+        // Should NOT use storage, so it should fail
+        expect(result.current.error).toBe(
+            "Table not identified. Please scan QR code."
+        );
+        expect(MenuService.getMenu).not.toHaveBeenCalled();
     });
 
     it("should handle successful menu fetch", async () => {

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Minus, Plus } from "lucide-react";
 import { useCart } from "../../contexts/CartContext";
+import { useToast } from "../../contexts/ToastContext";
 import PropTypes from "prop-types";
 import ImageWithFallback from "./ImageWithFallback";
 
@@ -17,6 +18,7 @@ import ImageWithFallback from "./ImageWithFallback";
  */
 const ProductDetailDrawer = ({ isOpen, onClose, product }) => {
     const { addToCart } = useCart();
+    const { warning, success } = useToast();
     const [quantity, setQuantity] = useState(1);
     const [selectedModifiers, setSelectedModifiers] = useState([]);
     const [isDesktop, setIsDesktop] = useState(window.innerWidth >= 768);
@@ -86,11 +88,12 @@ const ProductDetailDrawer = ({ isOpen, onClose, product }) => {
         );
 
         if (missingRequired.length > 0) {
-            alert(`Mohon pilih ${missingRequired[0].name}`);
+            warning(`Mohon pilih ${missingRequired[0].name}`);
             return;
         }
 
         addToCart(product, quantity, selectedModifiers);
+        success("Berhasil ditambahkan ke keranjang");
         onClose();
     };
 
@@ -121,7 +124,7 @@ const ProductDetailDrawer = ({ isOpen, onClose, product }) => {
                     >
                         <div className="relative h-48 md:h-56 shrink-0">
                             <ImageWithFallback
-                                src={product.image}
+                                src={product.url_file || product.image}
                                 alt={product.name}
                                 className="w-full h-full object-cover"
                                 sizes="(max-width: 768px) 100vw, 450px"
