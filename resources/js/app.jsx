@@ -4,6 +4,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { CartProvider } from "./contexts/CartContext";
 import { AuthProvider } from "./contexts/AuthContext";
 import { ToastProvider } from "./contexts/ToastContext";
+import ErrorBoundary from "./components/shared/ErrorBoundary";
 
 // Lazy Load Pages
 const MenuPage = lazy(() => import("./pages/user/Menu"));
@@ -34,89 +35,97 @@ const LoadingFallback = () => (
 );
 
 const App = () => {
+    console.log("App component rendering...");
     return (
-        <AuthProvider>
-            <ToastProvider>
-                <CartProvider>
-                    <BrowserRouter>
-                        <Suspense fallback={<LoadingFallback />}>
-                            <Routes>
-                                {/* Customer Routes */}
-                                <Route
-                                    path="/"
-                                    element={<Navigate to="/menu" replace />}
-                                />
-                                {/* Support both path param and query param for backward compatibility if needed, 
-                                but prioritizing the path param as requested */}
-                                <Route
-                                    path="/menu/:tableUuid"
-                                    element={<MenuPage />}
-                                />
-                                <Route path="/menu" element={<MenuPage />} />
-                                <Route
-                                    path="/checkout"
-                                    element={<CheckoutPage />}
-                                />
-                                <Route
-                                    path="/success"
-                                    element={<SuccessPage />}
-                                />
-
-                                {/* Admin Routes */}
-                                <Route
-                                    path="/admin/login"
-                                    element={<AdminLogin />}
-                                />
-
-                                <Route element={<ProtectedRoute />}>
+        <ErrorBoundary>
+            <AuthProvider>
+                <ToastProvider>
+                    <CartProvider>
+                        <BrowserRouter>
+                            <Suspense fallback={<LoadingFallback />}>
+                                <Routes>
+                                    {/* Customer Routes */}
                                     <Route
-                                        path="/admin"
-                                        element={<AdminLayout />}
-                                    >
-                                        <Route
-                                            index
-                                            element={
-                                                <Navigate
-                                                    to="/admin/dashboard"
-                                                    replace
-                                                />
-                                            }
-                                        />
-                                        <Route
-                                            path="dashboard"
-                                            element={<AdminDashboard />}
-                                        />
-                                        <Route
-                                            path="orders"
-                                            element={<AdminOrders />}
-                                        />
-                                        <Route
-                                            path="menu"
-                                            element={<AdminMenu />}
-                                        />
-                                        <Route
-                                            path="categories"
-                                            element={<AdminCategories />}
-                                        />
-                                        <Route
-                                            path="modifiers"
-                                            element={<AdminModifiers />}
-                                        />
-                                        <Route
-                                            path="tables"
-                                            element={<AdminTables />}
-                                        />
-                                    </Route>
-                                </Route>
+                                        path="/"
+                                        element={
+                                            <Navigate to="/menu" replace />
+                                        }
+                                    />
+                                    {/* Support both path param and query param for backward compatibility if needed, 
+                                but prioritizing the path param as requested */}
+                                    <Route
+                                        path="/menu/:tableUuid"
+                                        element={<MenuPage />}
+                                    />
+                                    <Route
+                                        path="/menu"
+                                        element={<MenuPage />}
+                                    />
+                                    <Route
+                                        path="/checkout"
+                                        element={<CheckoutPage />}
+                                    />
+                                    <Route
+                                        path="/success"
+                                        element={<SuccessPage />}
+                                    />
 
-                                {/* Catch-all Route */}
-                                <Route path="*" element={<NotFound />} />
-                            </Routes>
-                        </Suspense>
-                    </BrowserRouter>
-                </CartProvider>
-            </ToastProvider>
-        </AuthProvider>
+                                    {/* Admin Routes */}
+                                    <Route
+                                        path="/admin/login"
+                                        element={<AdminLogin />}
+                                    />
+
+                                    <Route element={<ProtectedRoute />}>
+                                        <Route
+                                            path="/admin"
+                                            element={<AdminLayout />}
+                                        >
+                                            <Route
+                                                index
+                                                element={
+                                                    <Navigate
+                                                        to="/admin/dashboard"
+                                                        replace
+                                                    />
+                                                }
+                                            />
+                                            <Route
+                                                path="dashboard"
+                                                element={<AdminDashboard />}
+                                            />
+                                            <Route
+                                                path="orders"
+                                                element={<AdminOrders />}
+                                            />
+                                            <Route
+                                                path="menu"
+                                                element={<AdminMenu />}
+                                            />
+                                            <Route
+                                                path="categories"
+                                                element={<AdminCategories />}
+                                            />
+                                            <Route
+                                                path="modifiers"
+                                                element={<AdminModifiers />}
+                                            />
+                                            <Route
+                                                path="tables"
+                                                element={<AdminTables />}
+                                            />
+                                        </Route>
+                                    </Route>
+
+                                    {/* Catch-all Route */}
+                                    <Route path="*" element={<NotFound />} />
+                                </Routes>
+                            </Suspense>
+                        </BrowserRouter>
+                    </CartProvider>
+                </ToastProvider>
+            </AuthProvider>
+        </ErrorBoundary>
     );
 };
 

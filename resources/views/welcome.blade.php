@@ -9,6 +9,10 @@
         @vite(['resources/css/app.css', 'resources/js/app.jsx'])
     </head>
     <body class="antialiased bg-coffee-50">
-        <div id="app"></div>
+        <div id="app">
+            <div style="display: flex; justify-content: center; align-items: center; height: 100vh; font-family: sans-serif; color: #5D4037;">
+                <h1>Loading Application...</h1>
+            </div>
+        </div>
     </body>
 </html>
