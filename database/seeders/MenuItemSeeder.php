@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use Illuminate\Database\Seeder;
 use App\Models\MenuItem;
 use App\Models\Category;
+use App\Models\ModifierGroup;
 
 class MenuItemSeeder extends Seeder
 {
@@ -14,6 +15,7 @@ class MenuItemSeeder extends Seeder
     public function run(): void
     {
         $categories = Category::all();
+        $modifierGroups = ModifierGroup::all();
 
         // Menu items templates per category
         $menuTemplates = [
@@ -71,7 +73,7 @@ class MenuItemSeeder extends Seeder
                     $description = 'Menu spesial ' . $name;
                 }
 
-                MenuItem::create([
+                $menuItem = MenuItem::create([
                     'category_id' => $category->id,
                     'name' => $name,
                     'description' => $description,
@@ -79,7 +81,16 @@ class MenuItemSeeder extends Seeder
                     'is_available' => true,
                     'sort_order' => $i,
                 ]);
+
+                // Attach random modifier groups to menu items
+                if ($modifierGroups->count() > 0) {
+                    // Get random 1-3 modifier groups
+                    $randomModifiers = $modifierGroups->random(min(rand(1, 3), $modifierGroups->count()));
+                    $menuItem->modifierGroups()->attach($randomModifiers->pluck('id'));
+                }
             }
         }
+
+        $this->command->info('Created 100 menu items with modifier groups attached');
     }
 }
