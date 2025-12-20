@@ -58,6 +58,11 @@ class MidtransService
                 'phone' => '0812345678',
             ],
             'item_details' => $itemDetails,
+            'callbacks' => [
+                'finish' => route('payment.finish'),
+                'unfinish' => route('payment.unfinish'),
+                'error' => route('payment.error'),
+            ],
             'enabled_payments' => [
                 'gopay', 'shopeepay', 'other_qris',
                 'bca_va', 'bni_va', 'bri_va', 'permata_va',

@@ -50,25 +50,10 @@ export const useCheckout = () => {
      */
     const handleSnapPayment = useCallback(
         (snapToken, order) => {
-            if (!window.snap) {
-                clearCart();
-                navigate("/success", { state: { order } });
-                return;
-            }
-            window.snap.pay(snapToken, {
-                onSuccess: () => {
-                    clearCart();
-                    navigate("/success", { state: { order } });
-                },
-                onPending: () => {
-                    clearCart();
-                    navigate("/success", { state: { order } });
-                },
-                onError: () => setError("Payment failed!"),
-                onClose: () => setError("Payment window closed!"),
-            });
+            // Redirect to Midtrans Snap Page
+            window.location.href = `https://app.sandbox.midtrans.com/snap/v2/vtweb/${snapToken}`;
         },
-        [clearCart, navigate]
+        []
     );
 
     /**
