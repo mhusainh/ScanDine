@@ -13,7 +13,7 @@ class OrderController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Order::with(['table', 'orderItems.menuItem', 'payment']);
+        $query = Order::with(['table', 'orderItems.menuItem', 'orderItems.orderItemModifiers.modifierItem', 'payment']);
 
         // Filter by status
         if ($request->has('status') && $request->status != '') {

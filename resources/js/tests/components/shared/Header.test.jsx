@@ -12,7 +12,7 @@ describe("Header Component", () => {
 
     it("renders correctly with provided table name", () => {
         const { container } = render(<Header tableName="Meja 5" />);
-        expect(screen.getByText("Meja 5")).toBeInTheDocument();
+        expect(screen.getByText("Table Meja 5")).toBeInTheDocument();
         expect(container).toMatchSnapshot();
     });
 });

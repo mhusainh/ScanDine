@@ -9,7 +9,7 @@ import PropTypes from "prop-types";
  * @param {object} props
  * @param {string} props.tableName - The table name from API (optional)
  */
-const Header = ({ tableName = "Table Unknown" }) => {
+const Header = ({ tableName = "Unknown" }) => {
     return (
         <header className="bg-white/90 backdrop-blur-md shadow-sm sticky top-0 z-30 border-b border-coffee-100">
             <div className="container mx-auto px-4 h-16 flex items-center justify-between">

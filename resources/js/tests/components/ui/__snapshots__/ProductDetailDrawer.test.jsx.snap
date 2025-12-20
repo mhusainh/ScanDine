@@ -105,7 +105,8 @@ exports[`ProductDetailDrawer Component > should render correctly when open with 
             <span
               class="text-sm text-coffee-500"
             >
-              +Rp 
+              +Rp
+               
               2,000
             </span>
           </div>
@@ -137,7 +138,8 @@ exports[`ProductDetailDrawer Component > should render correctly when open with 
             <span
               class="text-sm text-coffee-500"
             >
-              +Rp 
+              +Rp
+               
               5,000
             </span>
           </div>
@@ -152,7 +154,8 @@ exports[`ProductDetailDrawer Component > should render correctly when open with 
             <span
               class="text-sm text-coffee-500"
             >
-              +Rp 
+              +Rp
+               
               4,000
             </span>
           </div>

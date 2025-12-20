@@ -246,8 +246,31 @@ const AdminOrders = () => {
                                                     {item.menu_item?.name ||
                                                         "Unknown Item"}
                                                 </div>
+                                                {item.order_item_modifiers &&
+                                                    item.order_item_modifiers
+                                                        .length > 0 && (
+                                                        <div className="text-xs text-coffee-600 mt-1 space-y-0.5">
+                                                            {item.order_item_modifiers.map(
+                                                                (mod, mIdx) => (
+                                                                    <div
+                                                                        key={
+                                                                            mIdx
+                                                                        }
+                                                                        className="flex items-center"
+                                                                    >
+                                                                        <span className="w-1.5 h-1.5 rounded-full bg-coffee-400 mr-2"></span>
+                                                                        {
+                                                                            mod
+                                                                                .modifier_item
+                                                                                ?.name
+                                                                        }
+                                                                    </div>
+                                                                )
+                                                            )}
+                                                        </div>
+                                                    )}
                                                 {item.note && (
-                                                    <div className="text-xs text-coffee-600 italic mt-0.5">
+                                                    <div className="text-xs text-coffee-600 italic mt-1 bg-yellow-50 px-2 py-1 rounded border border-yellow-100 inline-block">
                                                         Note: {item.note}
                                                     </div>
                                                 )}

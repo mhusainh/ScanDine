@@ -1,6 +1,6 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`Header Component > renders correctly with default table number 1`] = `
+exports[`Header Component > renders correctly with default table name 1`] = `
 <div>
   <header
     class="bg-white/90 backdrop-blur-md shadow-sm sticky top-0 z-30 border-b border-coffee-100"
@@ -25,7 +25,7 @@ exports[`Header Component > renders correctly with default table number 1`] = `
       <div
         class="text-sm font-medium text-coffee-600 bg-coffee-50 px-3 py-1 rounded-full border border-coffee-200"
       >
-        Table #
+        Table 
         Unknown
       </div>
     </div>
@@ -33,7 +33,7 @@ exports[`Header Component > renders correctly with default table number 1`] = `
 </div>
 `;
 
-exports[`Header Component > renders correctly with provided table number 1`] = `
+exports[`Header Component > renders correctly with provided table name 1`] = `
 <div>
   <header
     class="bg-white/90 backdrop-blur-md shadow-sm sticky top-0 z-30 border-b border-coffee-100"
@@ -58,8 +58,8 @@ exports[`Header Component > renders correctly with provided table number 1`] = `
       <div
         class="text-sm font-medium text-coffee-600 bg-coffee-50 px-3 py-1 rounded-full border border-coffee-200"
       >
-        Table #
-        5
+        Table 
+        Meja 5
       </div>
     </div>
   </header>

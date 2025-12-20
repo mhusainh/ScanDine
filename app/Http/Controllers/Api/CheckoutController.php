@@ -96,11 +96,10 @@ class CheckoutController extends Controller
                 $snapToken = $this->midtransService->createTransaction($order);
 
                 DB::commit();
-
                 return response()->json([
                     'success' => true,
                     'message' => 'Order berhasil dibuat',
-                    'order' => $order->load('payment'),
+                    'order' => $order->load(['payment', 'table']),
                     'snap_token' => $snapToken,
                 ]);
             } else {
@@ -117,7 +116,7 @@ class CheckoutController extends Controller
                 return response()->json([
                     'success' => true,
                     'message' => 'Order berhasil dibuat. Silakan bayar di kasir.',
-                    'order' => $order->load('payment'),
+                    'order' => $order->load(['payment', 'table']),
                 ]);
             }
         } catch (\Exception $e) {

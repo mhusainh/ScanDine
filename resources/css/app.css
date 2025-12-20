@@ -23,3 +23,39 @@
     --color-cream-100: #F5F5DC;
     --color-cream-50: #FAF9F6;
 }
+
+@layer utilities {
+    .scrollbar-hide {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+    }
+
+    .scrollbar-hide::-webkit-scrollbar {
+        display: none;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+        background-color: var(--color-coffee-200);
+        border-radius: 20px;
+    }
+
+    .text-fluid-h1 {
+        font-size: 2.25rem;
+        font-size: clamp(1.5rem, 4vw, 2.25rem);
+        line-height: 1.2;
+    }
+
+    .text-fluid-h2 {
+        font-size: 1.875rem;
+        font-size: clamp(1.25rem, 3vw, 1.875rem);
+        line-height: 1.3;
+    }
+}

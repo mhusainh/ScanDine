@@ -103,10 +103,15 @@ const CartDrawer = ({ isOpen, onClose, cart, updateQuantity, total }) => {
                                                                                 mod.name
                                                                             }
                                                                         </span>
-                                                                        {mod.price >
+                                                                        {parseFloat(
+                                                                            mod.price
+                                                                        ) >
                                                                             0 && (
                                                                             <span>
-                                                                                {mod.price.toLocaleString()}
+                                                                                +Rp{" "}
+                                                                                {parseFloat(
+                                                                                    mod.price
+                                                                                ).toLocaleString()}
                                                                             </span>
                                                                         )}
                                                                     </div>
@@ -117,10 +122,13 @@ const CartDrawer = ({ isOpen, onClose, cart, updateQuantity, total }) => {
                                                 <div className="text-sm font-bold text-coffee-700 mt-1">
                                                     Rp{" "}
                                                     {(
-                                                        item.price +
+                                                        parseFloat(item.price) +
                                                         (item.modifiers?.reduce(
                                                             (s, m) =>
-                                                                s + m.price,
+                                                                s +
+                                                                parseFloat(
+                                                                    m.price
+                                                                ),
                                                             0
                                                         ) || 0)
                                                     ).toLocaleString()}

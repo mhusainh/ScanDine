@@ -36,6 +36,11 @@ const AdminMenu = () => {
     const [imagePreview, setImagePreview] = useState(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
+    // Lazy loading states for edit details
+    const [isLoadingDetails, setIsLoadingDetails] = useState(false);
+    const [loadingStatus, setLoadingStatus] = useState("");
+    const [loadError, setLoadError] = useState(null);
+
     const [processingId, setProcessingId] = useState(null);
 
     // Pagination state
@@ -45,7 +50,7 @@ const AdminMenu = () => {
     useEffect(() => {
         fetchMenuData();
         fetchCategories();
-        fetchModifierGroups();
+        // Modifier groups are now lazy loaded when modal opens
     }, [currentPage, search, selectedCategory]);
 
     const fetchCategories = async () => {
@@ -123,9 +128,33 @@ const AdminMenu = () => {
         }
     };
 
+    /**
+     * Handle opening the modal with lazy loading implementation.
+     *
+     * Lazy Loading Flow:
+     * 1. Start: Open modal immediately, set isLoadingDetails=true.
+     * 2. Progress: Show loading spinner, block interaction.
+     * 3. Fetch: Async request to get full product details AND modifier groups (if not loaded).
+     * 4. Resources: Wait for image to load (if exists).
+     * 5. Success: Populate form data, set isLoadingDetails=false, enable interaction.
+     * 6. Error: Show error message with retry button, set loadError state.
+     */
     const handleOpenModal = async (product = null) => {
+        // Reset states
+        setLoadError(null);
+        setLoadingStatus("");
+
+        // Start Lazy Loading
+        setIsLoadingDetails(true);
+        setIsModalOpen(true);
+
+        const startTime = performance.now();
+        console.log(`[LazyLoad] Started at ${new Date().toISOString()}`);
+
         if (product) {
             setEditingProduct(product);
+
+            // Initial optimistic set from list data (basic info)
             setFormData({
                 name: product.name,
                 category_id: product.category_id,
@@ -136,26 +165,81 @@ const AdminMenu = () => {
                 modifier_groups: [], // Will be populated after fetch
             });
             setImagePreview(product.url_file);
-            setIsModalOpen(true);
 
-            // Fetch full details to get modifier groups
+            // Fetch full details and modifier groups if needed
             try {
-                const response = await axios.get(
-                    `/api/admin/menu-items/${product.id}`
-                );
-                if (response.data.success) {
-                    const fullProduct = response.data.data;
+                setLoadingStatus("Fetching data...");
+                const promises = [
+                    axios.get(`/api/admin/menu-items/${product.id}`),
+                ];
+
+                // Lazy load modifier groups if not already loaded
+                if (modifierGroups.length === 0) {
+                    promises.push(axios.get("/api/admin/modifier-groups"));
+                }
+
+                const responses = await Promise.all(promises);
+                const productResponse = responses[0];
+
+                // Handle Modifier Groups response if it was fetched
+                if (responses.length > 1) {
+                    const groupsResponse = responses[1];
+                    if (groupsResponse.data.success) {
+                        setModifierGroups(groupsResponse.data.data);
+                        console.log(
+                            `[LazyLoad] Loaded ${groupsResponse.data.data.length} modifier groups`
+                        );
+                    }
+                }
+
+                if (productResponse.data.success) {
+                    const fullProduct = productResponse.data.data;
                     setFormData((prev) => ({
                         ...prev,
                         modifier_groups: fullProduct.modifier_groups
                             ? fullProduct.modifier_groups.map((g) => g.id)
                             : [],
                     }));
+
+                    // Resource Loading (Image)
+                    if (fullProduct.url_file) {
+                        setLoadingStatus("Loading resources...");
+                        try {
+                            await new Promise((resolve) => {
+                                const img = new Image();
+                                img.src = fullProduct.url_file;
+                                img.onload = resolve;
+                                img.onerror = resolve; // Don't block on error
+                            });
+                        } catch (imgError) {
+                            console.warn(
+                                "[LazyLoad] Image preload warning:",
+                                imgError
+                            );
+                        }
+                    }
+
+                    // Loading Finished Successfully
+                    const endTime = performance.now();
+                    console.log(
+                        `[LazyLoad] Finished in ${(endTime - startTime).toFixed(
+                            2
+                        )}ms`
+                    );
+                    setLoadingStatus("Ready");
+                    setIsLoadingDetails(false);
+                } else {
+                    throw new Error("Failed to fetch details");
                 }
             } catch (error) {
-                console.error("Error fetching product details:", error);
+                console.error("[LazyLoad] Error:", error);
+                setLoadError(
+                    "Failed to load data. Please check your connection."
+                );
+                setIsLoadingDetails(false);
             }
         } else {
+            // Add Mode
             setEditingProduct(null);
             setFormData({
                 name: "",
@@ -167,8 +251,46 @@ const AdminMenu = () => {
                 modifier_groups: [],
             });
             setImagePreview(null);
+
+            // Lazy load modifier groups if not already loaded
+            if (modifierGroups.length === 0) {
+                try {
+                    setLoadingStatus("Loading dependencies...");
+                    const response = await axios.get(
+                        "/api/admin/modifier-groups"
+                    );
+                    if (response.data.success) {
+                        setModifierGroups(response.data.data);
+                        console.log(
+                            `[LazyLoad] Loaded ${response.data.data.length} modifier groups`
+                        );
+                    }
+                    const endTime = performance.now();
+                    console.log(
+                        `[LazyLoad] Finished in ${(endTime - startTime).toFixed(
+                            2
+                        )}ms`
+                    );
+                    setIsLoadingDetails(false);
+                } catch (error) {
+                    console.error(
+                        "[LazyLoad] Error fetching modifier groups:",
+                        error
+                    );
+                    setLoadError("Failed to load modifier groups.");
+                    setIsLoadingDetails(false);
+                }
+            } else {
+                setIsLoadingDetails(false);
+            }
         }
-        setIsModalOpen(true);
+    };
+
+    // Retry handler for lazy loading failure
+    const handleRetryLoad = () => {
+        if (editingProduct) {
+            handleOpenModal(editingProduct);
+        }
     };
 
     const handleImageChange = (e) => {
@@ -210,11 +332,9 @@ const AdminMenu = () => {
 
         // Append modifier groups
         if (formData.modifier_groups.length > 0) {
-            // If the backend expects an array, we might need to append differently
-            // But based on typical Laravel handling with FormData, we can join them or append multiple times
-            // The controller code I saw earlier: $request->modifier_groups can be string (explode) or array
-            // Let's send it as a comma-separated string for simplicity with FormData
-            data.append("modifier_groups", formData.modifier_groups.join(","));
+            formData.modifier_groups.forEach((id) => {
+                data.append("modifier_groups[]", id);
+            });
         }
 
         try {
@@ -282,7 +402,37 @@ const AdminMenu = () => {
                             </button>
                         </div>
 
-                        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+                        <form
+                            onSubmit={handleSubmit}
+                            className="p-6 space-y-6 relative"
+                        >
+                            {/* Lazy Loading Overlay */}
+                            {(isLoadingDetails || loadError) && (
+                                <div className="absolute inset-0 bg-white/80 backdrop-blur-sm z-20 flex flex-col items-center justify-center rounded-b-2xl">
+                                    {isLoadingDetails ? (
+                                        <>
+                                            <Loader2 className="w-10 h-10 text-coffee-600 animate-spin mb-3" />
+                                            <p className="text-coffee-600 font-medium">
+                                                Loading product details...
+                                            </p>
+                                        </>
+                                    ) : (
+                                        <div className="text-center p-6">
+                                            <p className="text-red-500 font-medium mb-4">
+                                                {loadError}
+                                            </p>
+                                            <button
+                                                type="button"
+                                                onClick={handleRetryLoad}
+                                                className="px-4 py-2 bg-coffee-600 text-white rounded-lg hover:bg-coffee-700 transition-colors font-medium"
+                                            >
+                                                Retry
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div className="space-y-4">
                                     <div>
@@ -388,7 +538,7 @@ const AdminMenu = () => {
                                             />
                                             {imagePreview ? (
                                                 <div className="relative h-40 w-full">
-                                                    <img
+                                                    <ImageWithFallback
                                                         src={imagePreview}
                                                         alt="Preview"
                                                         className="w-full h-full object-contain rounded-lg"
@@ -480,20 +630,36 @@ const AdminMenu = () => {
                                 </div>
                             </div>
 
-                            <div className="pt-4 flex space-x-3 border-t border-coffee-100">
+                            <div className="flex justify-end space-x-3 pt-6 border-t border-coffee-100">
                                 <button
                                     type="button"
                                     onClick={() => setIsModalOpen(false)}
-                                    className="flex-1 px-4 py-2 border border-coffee-200 rounded-xl font-bold text-coffee-600 hover:bg-coffee-50"
+                                    className="px-4 py-2 border border-coffee-200 text-coffee-600 rounded-xl hover:bg-coffee-50 transition-colors font-medium"
+                                    disabled={isLoadingDetails}
                                 >
                                     Cancel
                                 </button>
                                 <button
                                     type="submit"
-                                    disabled={isSubmitting}
-                                    className="flex-1 px-4 py-2 bg-coffee-600 text-white rounded-xl font-bold hover:bg-coffee-700 disabled:opacity-50"
+                                    disabled={
+                                        isSubmitting ||
+                                        isLoadingDetails ||
+                                        loadError
+                                    }
+                                    className="px-6 py-2 bg-coffee-600 text-white rounded-xl hover:bg-coffee-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
                                 >
-                                    {isSubmitting ? "Saving..." : "Save Item"}
+                                    {isSubmitting ? (
+                                        <>
+                                            <Loader2 className="w-5 h-5 animate-spin" />
+                                            <span>Saving...</span>
+                                        </>
+                                    ) : (
+                                        <span>
+                                            {editingProduct
+                                                ? "Save Changes"
+                                                : "Create Item"}
+                                        </span>
+                                    )}
                                 </button>
                             </div>
                         </form>

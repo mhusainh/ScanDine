@@ -68,9 +68,9 @@ export const CartProvider = ({ children }) => {
 
     const getCartTotal = () => {
         return cart.reduce((total, item) => {
-            const itemPrice = item.price;
+            const itemPrice = parseFloat(item.price);
             const modifiersPrice = item.modifiers.reduce(
-                (sum, mod) => sum + mod.price,
+                (sum, mod) => sum + parseFloat(mod.price),
                 0
             );
             return total + (itemPrice + modifiersPrice) * item.quantity;
