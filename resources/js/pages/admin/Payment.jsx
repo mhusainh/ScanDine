@@ -1,5 +1,13 @@
 import React, { useState } from "react";
-import { Search, Receipt, CheckCircle, Clock, User, Table, ShoppingBag } from "lucide-react";
+import {
+    Search,
+    Receipt,
+    CheckCircle,
+    Clock,
+    User,
+    Table,
+    ShoppingBag,
+} from "lucide-react";
 import axios from "../../libs/axios";
 
 const PaymentPage = () => {
@@ -12,7 +20,7 @@ const PaymentPage = () => {
 
     const handleSearch = async (e) => {
         e.preventDefault();
-        
+
         if (!searchQuery.trim()) {
             setError("Masukkan nomor order");
             return;
@@ -24,8 +32,10 @@ const PaymentPage = () => {
         setOrder(null);
 
         try {
-            const response = await axios.get(`/api/admin/orders/search/${searchQuery.trim()}`);
-            
+            const response = await axios.get(
+                `/api/admin/orders/search/${searchQuery.trim()}`
+            );
+
             if (response.data.success) {
                 setOrder(response.data.data);
             } else {
@@ -46,22 +56,24 @@ const PaymentPage = () => {
         setSuccessMessage("");
 
         try {
-            const response = await axios.post(`/api/admin/orders/${order.id}/confirm-payment`);
-            
+            const response = await axios.post(
+                `/api/admin/orders/${order.id}/confirm-payment`
+            );
+
             if (response.data.success) {
                 setSuccessMessage("Pembayaran berhasil dikonfirmasi!");
                 // Update order status
                 setOrder({
                     ...order,
-                    payment_status: 'paid',
-                    status: 'confirmed',
+                    payment_status: "paid",
+                    status: "confirmed",
                     payment: {
                         ...order.payment,
-                        payment_status: 'settlement',
-                        paid_at: new Date().toISOString()
-                    }
+                        payment_status: "settlement",
+                        paid_at: new Date().toISOString(),
+                    },
                 });
-                
+
                 // Clear search after 2 seconds
                 setTimeout(() => {
                     setSearchQuery("");
@@ -70,7 +82,9 @@ const PaymentPage = () => {
                 }, 3000);
             }
         } catch (err) {
-            setError(err.response?.data?.message || "Gagal konfirmasi pembayaran");
+            setError(
+                err.response?.data?.message || "Gagal konfirmasi pembayaran"
+            );
         } finally {
             setConfirming(false);
         }
@@ -95,7 +109,10 @@ const PaymentPage = () => {
                     </label>
                     <div className="flex gap-3">
                         <div className="flex-1 relative">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-coffee-400" size={20} />
+                            <Search
+                                className="absolute left-3 top-1/2 -translate-y-1/2 text-coffee-400"
+                                size={20}
+                            />
                             <input
                                 type="text"
                                 value={searchQuery}
@@ -141,21 +158,29 @@ const PaymentPage = () => {
                                     {order.order_number}
                                 </h2>
                                 <p className="text-coffee-100">
-                                    {new Date(order.created_at).toLocaleString('id-ID', {
-                                        dateStyle: 'full',
-                                        timeStyle: 'short'
-                                    })}
+                                    {new Date(order.created_at).toLocaleString(
+                                        "id-ID",
+                                        {
+                                            dateStyle: "full",
+                                            timeStyle: "short",
+                                        }
+                                    )}
                                 </p>
                             </div>
                             <div className="text-right">
-                                <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
-                                    order.payment_status === 'paid' 
-                                        ? 'bg-green-100 text-green-800'
-                                        : 'bg-yellow-100 text-yellow-800'
-                                }`}>
-                                    {order.payment_status === 'paid' ? (
+                                <div
+                                    className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
+                                        order.payment_status === "paid"
+                                            ? "bg-green-100 text-green-800"
+                                            : "bg-yellow-100 text-yellow-800"
+                                    }`}
+                                >
+                                    {order.payment_status === "paid" ? (
                                         <>
-                                            <CheckCircle className="mr-1" size={16} />
+                                            <CheckCircle
+                                                className="mr-1"
+                                                size={16}
+                                            />
                                             Terbayar
                                         </>
                                     ) : (
@@ -175,7 +200,9 @@ const PaymentPage = () => {
                             <div className="bg-coffee-50 rounded-lg p-4">
                                 <div className="flex items-center text-coffee-600 mb-2">
                                     <User className="mr-2" size={18} />
-                                    <span className="text-sm font-medium">Customer</span>
+                                    <span className="text-sm font-medium">
+                                        Customer
+                                    </span>
                                 </div>
                                 <div className="font-bold text-coffee-900">
                                     {order.customer_name || "Guest"}
@@ -184,19 +211,27 @@ const PaymentPage = () => {
                             <div className="bg-coffee-50 rounded-lg p-4">
                                 <div className="flex items-center text-coffee-600 mb-2">
                                     <Table className="mr-2" size={18} />
-                                    <span className="text-sm font-medium">Meja</span>
+                                    <span className="text-sm font-medium">
+                                        Meja
+                                    </span>
                                 </div>
                                 <div className="font-bold text-coffee-900">
-                                    {order.table?.table_number || order.table?.name || "-"}
+                                    {order.table?.table_number ||
+                                        order.table?.name ||
+                                        "-"}
                                 </div>
                             </div>
                             <div className="bg-coffee-50 rounded-lg p-4">
                                 <div className="flex items-center text-coffee-600 mb-2">
                                     <Receipt className="mr-2" size={18} />
-                                    <span className="text-sm font-medium">Metode Pembayaran</span>
+                                    <span className="text-sm font-medium">
+                                        Metode Pembayaran
+                                    </span>
                                 </div>
                                 <div className="font-bold text-coffee-900 capitalize">
-                                    {order.payment_method === 'cash' ? 'Tunai' : 'Online'}
+                                    {order.payment_method === "cash"
+                                        ? "Tunai"
+                                        : "Online"}
                                 </div>
                             </div>
                         </div>
@@ -204,45 +239,84 @@ const PaymentPage = () => {
                         {/* Order Items */}
                         <div>
                             <div className="flex items-center mb-4">
-                                <ShoppingBag className="mr-2 text-coffee-600" size={20} />
+                                <ShoppingBag
+                                    className="mr-2 text-coffee-600"
+                                    size={20}
+                                />
                                 <h3 className="font-bold text-lg text-coffee-900">
                                     Detail Pesanan
                                 </h3>
                             </div>
                             <div className="space-y-3">
                                 {order.order_items?.map((item, index) => (
-                                    <div key={index} className="bg-coffee-50 rounded-lg p-4">
+                                    <div
+                                        key={index}
+                                        className="bg-coffee-50 rounded-lg p-4"
+                                    >
                                         <div className="flex justify-between items-start mb-2">
                                             <div className="flex-1">
                                                 <div className="font-bold text-coffee-900">
-                                                    {item.quantity}x {item.menu_item?.name || "Menu Item"}
+                                                    {item.quantity}x{" "}
+                                                    {item.menu_item?.name ||
+                                                        "Menu Item"}
                                                 </div>
                                                 <div className="text-sm text-coffee-600">
-                                                    Rp {parseFloat(item.price).toLocaleString("id-ID")} × {item.quantity}
+                                                    Rp{" "}
+                                                    {parseFloat(
+                                                        item.price
+                                                    ).toLocaleString(
+                                                        "id-ID"
+                                                    )}{" "}
+                                                    × {item.quantity}
                                                 </div>
                                             </div>
                                             <div className="font-bold text-coffee-900">
-                                                Rp {(parseFloat(item.price) * item.quantity).toLocaleString("id-ID")}
+                                                Rp{" "}
+                                                {(
+                                                    parseFloat(item.price) *
+                                                    item.quantity
+                                                ).toLocaleString("id-ID")}
                                             </div>
                                         </div>
 
                                         {/* Modifiers */}
-                                        {item.order_item_modifiers && item.order_item_modifiers.length > 0 && (
-                                            <div className="ml-4 pt-2 border-t border-coffee-200 space-y-1">
-                                                {item.order_item_modifiers.map((mod, modIndex) => (
-                                                    <div key={modIndex} className="flex justify-between text-sm">
-                                                        <div className="text-coffee-600">
-                                                            + {mod.modifier_item?.name || "Add-on"}
-                                                        </div>
-                                                        {parseFloat(mod.price) > 0 && (
-                                                            <div className="text-coffee-600">
-                                                                Rp {(parseFloat(mod.price) * mod.quantity).toLocaleString("id-ID")}
+                                        {item.order_item_modifiers &&
+                                            item.order_item_modifiers.length >
+                                                0 && (
+                                                <div className="ml-4 pt-2 border-t border-coffee-200 space-y-1">
+                                                    {item.order_item_modifiers.map(
+                                                        (mod, modIndex) => (
+                                                            <div
+                                                                key={modIndex}
+                                                                className="flex justify-between text-sm"
+                                                            >
+                                                                <div className="text-coffee-600">
+                                                                    +{" "}
+                                                                    {mod
+                                                                        .modifier_item
+                                                                        ?.name ||
+                                                                        "Add-on"}
+                                                                </div>
+                                                                {parseFloat(
+                                                                    mod.price
+                                                                ) > 0 && (
+                                                                    <div className="text-coffee-600">
+                                                                        Rp{" "}
+                                                                        {(
+                                                                            parseFloat(
+                                                                                mod.price
+                                                                            ) *
+                                                                            mod.quantity
+                                                                        ).toLocaleString(
+                                                                            "id-ID"
+                                                                        )}
+                                                                    </div>
+                                                                )}
                                                             </div>
-                                                        )}
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        )}
+                                                        )
+                                                    )}
+                                                </div>
+                                            )}
 
                                         {/* Item Notes */}
                                         {item.notes && (
@@ -261,52 +335,66 @@ const PaymentPage = () => {
                                 <div className="text-sm text-yellow-800 font-medium mb-1">
                                     Catatan Pesanan:
                                 </div>
-                                <div className="text-yellow-900">{order.notes}</div>
+                                <div className="text-yellow-900">
+                                    {order.notes}
+                                </div>
                             </div>
                         )}
 
                         {/* Total */}
                         <div className="bg-coffee-900 rounded-xl p-5 text-white">
                             <div className="flex items-center justify-between">
-                                <span className="text-lg font-bold">Total Pembayaran</span>
+                                <span className="text-lg font-bold">
+                                    Total Pembayaran
+                                </span>
                                 <span className="text-3xl font-bold">
-                                    Rp {parseFloat(order.total_amount).toLocaleString("id-ID")}
+                                    Rp{" "}
+                                    {parseFloat(
+                                        order.total_amount
+                                    ).toLocaleString("id-ID")}
                                 </span>
                             </div>
                         </div>
 
                         {/* Confirm Button */}
-                        {order.payment_status !== 'paid' && order.payment_method === 'cash' && (
-                            <button
-                                onClick={handleConfirmPayment}
-                                disabled={confirming}
-                                className="w-full bg-green-600 text-white py-4 rounded-xl font-bold text-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2 transition-colors shadow-lg"
-                            >
-                                {confirming ? (
-                                    <>
-                                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                                        <span>Memproses...</span>
-                                    </>
-                                ) : (
-                                    <>
-                                        <CheckCircle size={24} />
-                                        <span>Konfirmasi Terbayar</span>
-                                    </>
-                                )}
-                            </button>
-                        )}
+                        {order.payment_status !== "paid" &&
+                            order.payment_method === "cash" && (
+                                <button
+                                    onClick={handleConfirmPayment}
+                                    disabled={confirming}
+                                    className="w-full bg-green-600 text-white py-4 rounded-xl font-bold text-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2 transition-colors shadow-lg"
+                                >
+                                    {confirming ? (
+                                        <>
+                                            <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                            <span>Memproses...</span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <CheckCircle size={24} />
+                                            <span>Konfirmasi Terbayar</span>
+                                        </>
+                                    )}
+                                </button>
+                            )}
 
-                        {order.payment_status === 'paid' && (
+                        {order.payment_status === "paid" && (
                             <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg text-center font-medium">
-                                ✓ Pembayaran telah dikonfirmasi pada {order.payment?.paid_at && new Date(order.payment.paid_at).toLocaleString('id-ID')}
+                                ✓ Pembayaran telah dikonfirmasi pada{" "}
+                                {order.payment?.paid_at &&
+                                    new Date(
+                                        order.payment.paid_at
+                                    ).toLocaleString("id-ID")}
                             </div>
                         )}
 
-                        {order.payment_method === 'online' && order.payment_status !== 'paid' && (
-                            <div className="bg-blue-50 border border-blue-200 text-blue-700 px-4 py-3 rounded-lg text-center">
-                                Pembayaran online - menunggu konfirmasi dari payment gateway
-                            </div>
-                        )}
+                        {order.payment_method === "online" &&
+                            order.payment_status !== "paid" && (
+                                <div className="bg-blue-50 border border-blue-200 text-blue-700 px-4 py-3 rounded-lg text-center">
+                                    Pembayaran online - menunggu konfirmasi dari
+                                    payment gateway
+                                </div>
+                            )}
                     </div>
                 </div>
             )}

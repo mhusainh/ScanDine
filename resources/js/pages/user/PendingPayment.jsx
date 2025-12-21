@@ -6,7 +6,7 @@ const PendingPaymentPage = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const hasCheckedRef = useRef(false);
-    
+
     const order = location.state?.order;
 
     useEffect(() => {
@@ -14,10 +14,10 @@ const PendingPaymentPage = () => {
         if (hasCheckedRef.current) return;
         hasCheckedRef.current = true;
 
-        console.log('PendingPayment mounted - order:', order);
-        
+        console.log("PendingPayment mounted - order:", order);
+
         if (!order) {
-            console.log('No order found, redirecting to menu');
+            console.log("No order found, redirecting to menu");
             setTimeout(() => {
                 navigate("/menu", { replace: true });
             }, 100);
@@ -114,7 +114,9 @@ const PendingPaymentPage = () => {
                                                     Rp{" "}
                                                     {parseFloat(
                                                         item.price
-                                                    ).toLocaleString("id-ID")}{" "}
+                                                    ).toLocaleString(
+                                                        "id-ID"
+                                                    )}{" "}
                                                     × {item.quantity}
                                                 </div>
                                             </div>
@@ -213,15 +215,9 @@ const PendingPaymentPage = () => {
                                 Langkah Selanjutnya:
                             </h3>
                             <ol className="list-decimal list-inside space-y-1 text-blue-800 text-sm">
-                                <li>
-                                    Tunjukkan nomor pesanan ini ke kasir
-                                </li>
-                                <li>
-                                    Lakukan pembayaran sesuai total di atas
-                                </li>
-                                <li>
-                                    Pesanan Anda akan segera disiapkan
-                                </li>
+                                <li>Tunjukkan nomor pesanan ini ke kasir</li>
+                                <li>Lakukan pembayaran sesuai total di atas</li>
+                                <li>Pesanan Anda akan segera disiapkan</li>
                             </ol>
                         </div>
 

@@ -68,7 +68,7 @@ export const useCheckout = () => {
                 const payload = preparePayload(formData, tableUuid);
                 const response = await CheckoutService.checkout(payload);
 
-                console.log('Checkout response:', response);
+                console.log("Checkout response:", response);
 
                 if (response.success) {
                     if (response.snap_token) {
@@ -76,14 +76,17 @@ export const useCheckout = () => {
                         handleSnapPayment(response.snap_token, response.order);
                     } else {
                         // Cash payment - redirect to pending payment page
-                        console.log('Cash payment - order data:', response.order);
+                        console.log(
+                            "Cash payment - order data:",
+                            response.order
+                        );
                         clearCart();
-                        
+
                         // Small delay to ensure cart is cleared and state is ready
                         setTimeout(() => {
                             navigate("/pending-payment", {
                                 state: { order: response.order },
-                                replace: false
+                                replace: false,
                             });
                         }, 100);
                     }
