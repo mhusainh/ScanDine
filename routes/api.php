@@ -51,6 +51,7 @@ Route::prefix('admin')->middleware('auth:sanctum')->group(function () {
 
     // Orders
     Route::get('/orders', [OrderController::class, 'index']);
+    Route::get('/orders/search/{orderNumber}', [OrderController::class, 'searchByOrderNumber']);
     Route::get('/orders/{id}', [OrderController::class, 'show']);
     Route::patch('/orders/{id}/status', [OrderController::class, 'updateStatus']);
     Route::post('/orders/{id}/confirm-payment', [OrderController::class, 'confirmPayment']);

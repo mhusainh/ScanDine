@@ -96,10 +96,14 @@ class CheckoutController extends Controller
                 $snapToken = $this->midtransService->createTransaction($order);
 
                 DB::commit();
+                
+                // Refresh order to get latest data with relations
+                $order->refresh();
+                
                 return response()->json([
                     'success' => true,
                     'message' => 'Order berhasil dibuat',
-                    'order' => $order->load(['payment', 'table']),
+                    'order' => $order->load(['payment', 'table', 'orderItems.menuItem', 'orderItems.orderItemModifiers.modifierItem']),
                     'snap_token' => $snapToken,
                 ]);
             } else {
@@ -113,10 +117,13 @@ class CheckoutController extends Controller
 
                 DB::commit();
 
+                // Refresh order to get latest data with relations
+                $order->refresh();
+                
                 return response()->json([
                     'success' => true,
                     'message' => 'Order berhasil dibuat. Silakan bayar di kasir.',
-                    'order' => $order->load(['payment', 'table']),
+                    'order' => $order->load(['payment', 'table', 'orderItems.menuItem', 'orderItems.orderItemModifiers.modifierItem']),
                 ]);
             }
         } catch (\Exception $e) {

@@ -10,6 +10,7 @@ import ErrorBoundary from "./components/shared/ErrorBoundary";
 const MenuPage = lazy(() => import("./pages/user/Menu"));
 const CheckoutPage = lazy(() => import("./pages/user/Checkout"));
 const SuccessPage = lazy(() => import("./pages/user/Success"));
+const PendingPaymentPage = lazy(() => import("./pages/user/PendingPayment"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 // Admin Imports (Lazy)
@@ -18,6 +19,7 @@ const AdminLogin = lazy(() => import("./pages/auth/Login"));
 import ProtectedRoute from "./components/shared/ProtectedRoute"; // Keep synchronous as it's a lightweight wrapper
 const AdminDashboard = lazy(() => import("./pages/admin/Dashboard"));
 const AdminOrders = lazy(() => import("./pages/admin/Orders"));
+const AdminPayment = lazy(() => import("./pages/admin/Payment"));
 const AdminMenu = lazy(() => import("./pages/admin/Menu"));
 const AdminCategories = lazy(() => import("./pages/admin/Categories"));
 const AdminModifiers = lazy(() => import("./pages/admin/Modifiers"));
@@ -66,6 +68,10 @@ const App = () => {
                                         element={<CheckoutPage />}
                                     />
                                     <Route
+                                        path="/pending-payment"
+                                        element={<PendingPaymentPage />}
+                                    />
+                                    <Route
                                         path="/success"
                                         element={<SuccessPage />}
                                     />
@@ -93,6 +99,10 @@ const App = () => {
                                             <Route
                                                 path="dashboard"
                                                 element={<AdminDashboard />}
+                                            />
+                                            <Route
+                                                path="payment"
+                                                element={<AdminPayment />}
                                             />
                                             <Route
                                                 path="orders"

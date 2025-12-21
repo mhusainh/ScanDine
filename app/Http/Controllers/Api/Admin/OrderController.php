@@ -185,4 +185,29 @@ class OrderController extends Controller
             'message' => 'Order ini tidak dapat dikonfirmasi pembayarannya'
         ], 400);
     }
+
+    /**
+     * Search order by order number
+     */
+    public function searchByOrderNumber($orderNumber)
+    {
+        $order = Order::with([
+            'table',
+            'orderItems.menuItem',
+            'orderItems.orderItemModifiers.modifierItem',
+            'payment'
+        ])->where('order_number', $orderNumber)->first();
+
+        if (!$order) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Order tidak ditemukan'
+            ], 404);
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => $order
+        ]);
+    }
 }

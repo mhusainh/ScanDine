@@ -11,6 +11,7 @@ import {
     QrCode,
     Menu,
     X,
+    Wallet,
 } from "lucide-react";
 
 import { useAuth } from "../contexts/AuthContext";
@@ -25,6 +26,11 @@ const AdminLayout = () => {
             path: "/admin/dashboard",
             icon: <LayoutDashboard size={20} />,
             label: "Dashboard",
+        },
+        {
+            path: "/admin/payment",
+            icon: <Wallet size={20} />,
+            label: "Payment",
         },
         {
             path: "/admin/orders",

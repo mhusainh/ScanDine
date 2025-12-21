@@ -68,15 +68,27 @@ export const useCheckout = () => {
                 const payload = preparePayload(formData, tableUuid);
                 const response = await CheckoutService.checkout(payload);
 
+                console.log('Checkout response:', response);
+
                 if (response.success) {
                     if (response.snap_token) {
+                        // Online payment - redirect to Midtrans
                         handleSnapPayment(response.snap_token, response.order);
                     } else {
+                        // Cash payment - redirect to pending payment page
+                        console.log('Cash payment - order data:', response.order);
                         clearCart();
-                        navigate("/success", {
-                            state: { order: response.order },
-                        });
+                        
+                        // Small delay to ensure cart is cleared and state is ready
+                        setTimeout(() => {
+                            navigate("/pending-payment", {
+                                state: { order: response.order },
+                                replace: false
+                            });
+                        }, 100);
                     }
+                } else {
+                    throw new Error(response.message || "Checkout failed");
                 }
             } catch (err) {
                 setError(
