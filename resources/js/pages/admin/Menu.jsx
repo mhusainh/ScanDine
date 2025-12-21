@@ -14,6 +14,7 @@ import {
 import axios from "../../libs/axios";
 import ImageWithFallback from "../../components/ui/ImageWithFallback";
 import { useToast } from "../../contexts/ToastContext";
+import Swal from "sweetalert2";
 
 const AdminMenu = () => {
     const { success, error: toastError } = useToast();
@@ -114,8 +115,23 @@ const AdminMenu = () => {
     };
 
     const handleDelete = async (id) => {
-        if (!window.confirm("Are you sure you want to delete this item?"))
-            return;
+        const result = await Swal.fire({
+            title: 'Hapus Menu Item?',
+            text: 'Data yang dihapus tidak dapat dikembalikan.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#92400e',
+            cancelButtonColor: '#78716c',
+            confirmButtonText: 'Ya, Hapus!',
+            cancelButtonText: 'Batal',
+            customClass: {
+                popup: 'rounded-2xl',
+                confirmButton: 'rounded-lg px-4 py-2',
+                cancelButton: 'rounded-lg px-4 py-2'
+            }
+        });
+
+        if (!result.isConfirmed) return;
 
         if (processingId) return;
         setProcessingId(id);

@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { QRCodeCanvas } from "qrcode.react";
 import axios from "../../libs/axios";
+import Swal from "sweetalert2";
 
 const AdminTables = () => {
     // State
@@ -80,7 +81,23 @@ const AdminTables = () => {
     const handleDelete = async (id) => {
         if (processingId) return;
 
-        if (!confirm("Are you sure you want to delete this table?")) return;
+        const result = await Swal.fire({
+            title: 'Hapus Meja?',
+            text: 'Data yang dihapus tidak dapat dikembalikan.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#92400e',
+            cancelButtonColor: '#78716c',
+            confirmButtonText: 'Ya, Hapus!',
+            cancelButtonText: 'Batal',
+            customClass: {
+                popup: 'rounded-2xl',
+                confirmButton: 'rounded-lg px-4 py-2',
+                cancelButton: 'rounded-lg px-4 py-2'
+            }
+        });
+
+        if (!result.isConfirmed) return;
 
         setProcessingId(id);
         try {

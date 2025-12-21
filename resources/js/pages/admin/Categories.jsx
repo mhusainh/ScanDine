@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Plus, Edit2, Trash2, Power, X } from "lucide-react";
 import axios from "../../libs/axios";
 import { useToast } from "../../contexts/ToastContext";
+import Swal from "sweetalert2";
 
 const AdminCategories = () => {
     const { success, error: toastError } = useToast();
@@ -51,7 +52,23 @@ const AdminCategories = () => {
     };
 
     const handleDelete = async (id) => {
-        if (confirm("Are you sure you want to delete this category?")) {
+        const result = await Swal.fire({
+            title: 'Hapus Kategori?',
+            text: 'Data yang dihapus tidak dapat dikembalikan.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#92400e',
+            cancelButtonColor: '#78716c',
+            confirmButtonText: 'Ya, Hapus!',
+            cancelButtonText: 'Batal',
+            customClass: {
+                popup: 'rounded-2xl',
+                confirmButton: 'rounded-lg px-4 py-2',
+                cancelButton: 'rounded-lg px-4 py-2'
+            }
+        });
+
+        if (result.isConfirmed) {
             try {
                 await axios.delete(`/api/admin/categories/${id}`);
                 setCategories(categories.filter((cat) => cat.id !== id));

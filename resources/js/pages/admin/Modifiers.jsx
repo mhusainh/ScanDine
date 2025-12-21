@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import axios from "../../libs/axios";
 import { useToast } from "../../contexts/ToastContext";
+import Swal from "sweetalert2";
 
 const AdminModifiers = () => {
     const { success, error: toastError } = useToast();
@@ -138,9 +139,23 @@ const AdminModifiers = () => {
     const handleDeleteGroup = async (id) => {
         if (processingId) return;
 
-        if (
-            confirm("Delete this modifier group? This action cannot be undone.")
-        ) {
+        const result = await Swal.fire({
+            title: 'Hapus Modifier Group?',
+            text: 'Data yang dihapus tidak dapat dikembalikan.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#92400e',
+            cancelButtonColor: '#78716c',
+            confirmButtonText: 'Ya, Hapus!',
+            cancelButtonText: 'Batal',
+            customClass: {
+                popup: 'rounded-2xl',
+                confirmButton: 'rounded-lg px-4 py-2',
+                cancelButton: 'rounded-lg px-4 py-2'
+            }
+        });
+
+        if (result.isConfirmed) {
             setProcessingId(id);
             try {
                 await axios.delete(`/api/admin/modifier-groups/${id}`);
@@ -228,7 +243,23 @@ const AdminModifiers = () => {
     const handleDeleteItem = async (groupId, itemId) => {
         if (processingId) return;
 
-        if (confirm("Delete this modifier item?")) {
+        const result = await Swal.fire({
+            title: 'Hapus Modifier Item?',
+            text: 'Data yang dihapus tidak dapat dikembalikan.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#92400e',
+            cancelButtonColor: '#78716c',
+            confirmButtonText: 'Ya, Hapus!',
+            cancelButtonText: 'Batal',
+            customClass: {
+                popup: 'rounded-2xl',
+                confirmButton: 'rounded-lg px-4 py-2',
+                cancelButton: 'rounded-lg px-4 py-2'
+            }
+        });
+
+        if (result.isConfirmed) {
             setProcessingId(itemId);
             try {
                 await axios.delete(
