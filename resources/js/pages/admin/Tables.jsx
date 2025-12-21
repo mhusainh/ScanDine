@@ -82,19 +82,19 @@ const AdminTables = () => {
         if (processingId) return;
 
         const result = await Swal.fire({
-            title: 'Hapus Meja?',
-            text: 'Data yang dihapus tidak dapat dikembalikan.',
-            icon: 'warning',
+            title: "Hapus Meja?",
+            text: "Data yang dihapus tidak dapat dikembalikan.",
+            icon: "warning",
             showCancelButton: true,
-            confirmButtonColor: '#92400e',
-            cancelButtonColor: '#78716c',
-            confirmButtonText: 'Ya, Hapus!',
-            cancelButtonText: 'Batal',
+            confirmButtonColor: "#92400e",
+            cancelButtonColor: "#78716c",
+            confirmButtonText: "Ya, Hapus!",
+            cancelButtonText: "Batal",
             customClass: {
-                popup: 'rounded-2xl',
-                confirmButton: 'rounded-lg px-4 py-2',
-                cancelButton: 'rounded-lg px-4 py-2'
-            }
+                popup: "rounded-2xl",
+                confirmButton: "rounded-lg px-4 py-2",
+                cancelButton: "rounded-lg px-4 py-2",
+            },
         });
 
         if (!result.isConfirmed) return;
