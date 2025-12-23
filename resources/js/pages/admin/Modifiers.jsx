@@ -12,7 +12,6 @@ import {
 } from "lucide-react";
 import axios from "../../libs/axios";
 import { useToast } from "../../contexts/ToastContext";
-import Swal from "sweetalert2";
 
 const AdminModifiers = () => {
     const { success, error: toastError } = useToast();
@@ -29,7 +28,7 @@ const AdminModifiers = () => {
     const [editingGroup, setEditingGroup] = useState(null);
     const [groupForm, setGroupForm] = useState({
         name: "",
-        type: "single",
+        type: "single_choice",
         min_selection: 0,
         max_selection: 1,
         is_required: false,
@@ -105,7 +104,7 @@ const AdminModifiers = () => {
             setEditingGroup(null);
             setGroupForm({
                 name: "",
-                type: "single",
+                type: "single_choice",
                 min_selection: 0,
                 max_selection: 1,
                 is_required: false,
@@ -116,21 +115,72 @@ const AdminModifiers = () => {
 
     const handleGroupSubmit = async (e) => {
         e.preventDefault();
+
+        // Client-side validation
+        const minSel =
+            groupForm.min_selection === ""
+                ? 0
+                : parseInt(groupForm.min_selection);
+        // Treat empty string or 0 as null (unlimited) for max_selection if desired,
+        // but given min="1" on input, let's enforce positive integer if provided.
+        const maxSel =
+            groupForm.max_selection === ""
+                ? null
+                : parseInt(groupForm.max_selection);
+
+        if (isNaN(minSel) || minSel < 0) {
+            toastError("Minimum selection must be a valid non-negative number");
+            return;
+        }
+
+        if (maxSel !== null && (isNaN(maxSel) || maxSel < 1)) {
+            toastError("Maximum selection must be at least 1");
+            return;
+        }
+
+        if (maxSel !== null && minSel > maxSel) {
+            toastError("Min selection cannot be greater than max selection");
+            return;
+        }
+
         setIsSubmitting(true);
         try {
+            const payload = {
+                ...groupForm,
+                min_selection: minSel,
+                max_selection: maxSel,
+            };
+
             if (editingGroup) {
                 await axios.put(
                     `/api/admin/modifier-groups/${editingGroup.id}`,
-                    groupForm
+                    payload
                 );
+                success("Modifier group updated successfully");
             } else {
-                await axios.post("/api/admin/modifier-groups", groupForm);
+                await axios.post("/api/admin/modifier-groups", payload);
+                success("Modifier group created successfully");
             }
             fetchModifierGroups();
             setIsGroupModalOpen(false);
         } catch (error) {
             console.error("Error saving modifier group:", error);
-            alert("Failed to save modifier group");
+            if (error.response?.status === 422) {
+                const validationErrors = error.response.data.errors;
+                // Create a readable error message from the validation object
+                const errorMessage = Object.values(validationErrors)
+                    .flat()
+                    .join(", ");
+                toastError(
+                    errorMessage ||
+                        "Validation failed. Please check your input."
+                );
+            } else {
+                toastError(
+                    error.response?.data?.message ||
+                        "Failed to save modifier group"
+                );
+            }
         } finally {
             setIsSubmitting(false);
         }
@@ -139,23 +189,11 @@ const AdminModifiers = () => {
     const handleDeleteGroup = async (id) => {
         if (processingId) return;
 
-        const result = await Swal.fire({
-            title: "Hapus Modifier Group?",
-            text: "Data yang dihapus tidak dapat dikembalikan.",
-            icon: "warning",
-            showCancelButton: true,
-            confirmButtonColor: "#92400e",
-            cancelButtonColor: "#78716c",
-            confirmButtonText: "Ya, Hapus!",
-            cancelButtonText: "Batal",
-            customClass: {
-                popup: "rounded-2xl",
-                confirmButton: "rounded-lg px-4 py-2",
-                cancelButton: "rounded-lg px-4 py-2",
-            },
-        });
-
-        if (result.isConfirmed) {
+        if (
+            window.confirm(
+                "Hapus Modifier Group?\nData yang dihapus tidak dapat dikembalikan."
+            )
+        ) {
             setProcessingId(id);
             try {
                 await axios.delete(`/api/admin/modifier-groups/${id}`);
@@ -192,6 +230,13 @@ const AdminModifiers = () => {
 
     const handleItemSubmit = async (e) => {
         e.preventDefault();
+
+        // Client-side validation
+        if (parseFloat(itemForm.price) < 0) {
+            toastError("Price cannot be negative");
+            return;
+        }
+
         setIsSubmitting(true);
         try {
             if (editingItem) {
@@ -199,17 +244,33 @@ const AdminModifiers = () => {
                     `/api/admin/modifier-groups/${activeGroupId}/modifier-items/${editingItem.id}`,
                     itemForm
                 );
+                success("Modifier item updated successfully");
             } else {
                 await axios.post(
                     `/api/admin/modifier-groups/${activeGroupId}/modifier-items`,
                     itemForm
                 );
+                success("Modifier item added successfully");
             }
             fetchModifierItems(activeGroupId);
             setIsItemModalOpen(false);
         } catch (error) {
             console.error("Error saving modifier item:", error);
-            alert("Failed to save modifier item");
+            if (error.response?.status === 422) {
+                const validationErrors = error.response.data.errors;
+                const errorMessage = Object.values(validationErrors)
+                    .flat()
+                    .join(", ");
+                toastError(
+                    errorMessage ||
+                        "Validation failed. Please check your input."
+                );
+            } else {
+                toastError(
+                    error.response?.data?.message ||
+                        "Failed to save modifier item"
+                );
+            }
         } finally {
             setIsSubmitting(false);
         }
@@ -243,23 +304,11 @@ const AdminModifiers = () => {
     const handleDeleteItem = async (groupId, itemId) => {
         if (processingId) return;
 
-        const result = await Swal.fire({
-            title: "Hapus Modifier Item?",
-            text: "Data yang dihapus tidak dapat dikembalikan.",
-            icon: "warning",
-            showCancelButton: true,
-            confirmButtonColor: "#92400e",
-            cancelButtonColor: "#78716c",
-            confirmButtonText: "Ya, Hapus!",
-            cancelButtonText: "Batal",
-            customClass: {
-                popup: "rounded-2xl",
-                confirmButton: "rounded-lg px-4 py-2",
-                cancelButton: "rounded-lg px-4 py-2",
-            },
-        });
-
-        if (result.isConfirmed) {
+        if (
+            window.confirm(
+                "Hapus Modifier Item?\nData yang dihapus tidak dapat dikembalikan."
+            )
+        ) {
             setProcessingId(itemId);
             try {
                 await axios.delete(
@@ -598,10 +647,10 @@ const AdminModifiers = () => {
                                         }
                                         className="w-full px-4 py-2 rounded-xl border border-coffee-200 bg-white"
                                     >
-                                        <option value="single">
+                                        <option value="single_choice">
                                             Single Choice
                                         </option>
-                                        <option value="multiple">
+                                        <option value="multiple_choice">
                                             Multiple Choice
                                         </option>
                                     </select>
