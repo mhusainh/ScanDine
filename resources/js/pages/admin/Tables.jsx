@@ -247,7 +247,10 @@ const AdminTables = () => {
                                   <div className="bg-white p-2 rounded-xl border border-coffee-100 shadow-sm group-hover:scale-105 transition-transform duration-200">
                                       <QRCodeCanvas
                                           id={`qr-code-${table.id}`}
-                                          value={`${window.location.origin}/menu/${table.uuid}`}
+                                          value={`${
+                                              import.meta.env.VITE_APP_URL ||
+                                              window.location.origin
+                                          }/menu/${table.uuid}`}
                                           size={150}
                                           level={"H"}
                                           includeMargin={true}
